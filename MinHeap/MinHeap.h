@@ -67,10 +67,12 @@ public:
 private:
   std::vector<T> heap;
 
-  void bubbleUp(size_t position);
-  void sinkDown(size_t position);
+  void bubbleUp(size_t index);
+  void sinkDown(size_t index);
   void swap(size_t indexA, size_t indexB);
   bool search(const T& query, size_t start);
 };
+
+#include "MinHeap.tpp"
 
 #endif
