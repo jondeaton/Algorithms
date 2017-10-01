@@ -4,15 +4,20 @@
  * For testing the MinHeap data structure
  */
 
-#include <MinHeap.h>
+#include "MinHeap.h"
 #include <stdio.h>
 #include <random>
 
 int main(int argc, char* argv[]) {
-  MinHeap<int> minHeap;
+  (void) argc;
+  (void) argv;
 
-  for (int i = 0; i < 10; i++) {
-    minHeap.insert(random() % 100);
-  }
+  MinHeap<int> minHeap;
+  minHeap.insert(5);
+
+//  for (int i = 0; i < 10; i++) {
+//    minHeap.insert((int) random() % 100);
+////  }
+
 
 }

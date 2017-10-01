@@ -1,1 +1,12 @@
 # Created by .ignore support plugin (hsz.mobi)
+.gitignore
+.idea/
+Quine-Loop/four
+Quine-Loop/four.cpp
+Quine-Loop/one
+Quine-Loop/quine
+Quine-Loop/three
+Quine-Loop/three.cpp
+Quine-Loop/two
+Quine-Loop/two.cpp
+cmake-build-debug/

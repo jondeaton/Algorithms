@@ -19,23 +19,27 @@
 #include "MinHeap.h"
 using namespace std;
 
-MinHeap::MinHeap() : size(0) { }
+template <class T>
+MinHeap<T>::MinHeap() { }
 
-MinHeap::MinHeap(T elements[]) : size(0) {
+template <class T>
+MinHeap<T>::MinHeap(T elements[]) {
     for (T element : elements) insert(element);
 }
 
-void MinHeap::insert(T element) {
+template <class T>
+void MinHeap<T>::insert(T element) {
     heap.push_back(element);
     bubbleUp(heap.size() - 1);
-    size++;
 }
 
-bool MinHeap::contains(const T& element) {
+template <class T>
+bool MinHeap<T>::contains(const T& element) {
     return search(element, 0);
 }
 
-T MinHeap::pop() {
+template <class T>
+T MinHeap<T>::pop() {
     if (size() == 0) throw out_of_range ("MinHeap is empty");
 
     T min = heap[0];
@@ -44,16 +48,17 @@ T MinHeap::pop() {
     heap.pop_back();
     sinkDown(0);
 
-    size--;
     return min;
 }
 
-T MinHeap::peek() {
+template <class T>
+T MinHeap<T>::peek() {
     if (size() == 0) throw out_of_range ("MinHeap is empty");
     return heap[0];
 }
 
-void MinHeap::bubbleUp(size_t position) {
+template <class T>
+void MinHeap<T>::bubbleUp(size_t position) {
     if (position == 0) return; // no parent
     size_t parent = position / 2;
     if (heap[position] < heap[parent]) {
@@ -62,7 +67,8 @@ void MinHeap::bubbleUp(size_t position) {
     }
 }
 
-void MinHeap::sinkDown(size_t position) {
+template <class T>
+void MinHeap<T>::sinkDown(size_t position) {
     size_t left = 2 * position;
     size_t right = left + 1;
     if (heap[left] < heap[position]) {
@@ -74,13 +80,15 @@ void MinHeap::sinkDown(size_t position) {
     }
 }
 
-void MinHeap::swap(size_t indexA, size_t indexB) {
+template <class T>
+void MinHeap<T>::swap(size_t indexA, size_t indexB) {
     T temp = heap[indexA];
     heap[indexA] = heap[indexB];
     heap[indexB] = temp;
 }
 
-bool MinHeap::search(const T &query, size_t start) {
+template <class T>
+bool MinHeap<T>::search(const T &query, size_t start) {
     if (query < heap[start]) return false;
     if (query == heap[start]) return true;
     return search(query, 2 * start) || search(query, 2 * start + 1);
