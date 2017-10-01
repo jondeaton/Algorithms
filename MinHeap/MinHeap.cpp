@@ -17,6 +17,7 @@
  */
 
 #include "MinHeap.h"
+#include <out_of_range>
 using namespace std;
 
 template <class T>
