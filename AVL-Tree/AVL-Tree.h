@@ -21,6 +21,10 @@ public:
 
 private:
   BinaryNode<T> root;
+
+  void leftRotate(const BinaryNode<T>& node);
+  void rightRotate(const BinaryNode<T>& node);
+
 };
 
 #include "AVL-Tree.tpp"

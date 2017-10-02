@@ -14,21 +14,20 @@ class BinaryNode {
 
 public:
   T value;
+  size_t height;
 
   explicit BinaryNode();
   explicit BinaryNode(const T& value);
 
-  void insert(const T& value);
-  void insertLeft(const T& value);
-  void insertRight(const T& value);
+  std::shared_ptr<BinaryNode<T>> left;
+  std::shared_ptr<BinaryNode<T>> right;
 
-  BinaryNode<T>& left();
-  BinaryNode<T>& right();
-
-private:
-  std::shared_ptr<BinaryNode<T>> leftNode;
-  std::shared_ptr<BinaryNode<T>> rightNode;
 };
 
-#include "BinaryNode.tpp"
+template <class T>
+BinaryNode<T>::BinaryNode() : leftNode(nullptr), rightNode(nullptr) { }
+
+template <class T>
+BinaryNode<T>::BinaryNode(const T& value) : value(value), leftNode(nullptr), rightNode(nullptr) { }
+
 #endif
