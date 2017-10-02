@@ -6,4 +6,4 @@ SET(CMAKE_CXX_FLAGS "-g -O0 -Wall -Wextra -pedantic")
 
 set(SRC RedBlackTree.h RedBlackTree.tpp test-RedBlackTree.cpp)
 
-add_executable(test-heap ${SRC})
+add_executable(test-tree ${SRC})

@@ -11,6 +11,6 @@ template <class T>
 RedBlackTree<T>::RedBlackTree() { }
 
 template <class T>
-RedBlackTree<T>::insert(T element) {
+void RedBlackTree<T>::insert(T element) {
     (void) element;
 }

@@ -7,5 +7,5 @@
 #include "RedBlackTree.h"
 
 int main() {
-  RedBlackTree tree;
+  RedBlackTree<int> tree;
 }
