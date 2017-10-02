@@ -14,10 +14,11 @@ public:
 
   explicit RedBlackTree();
 
+  void inset(T element);
+
 private:
 
 };
 
 #include "RedBlackTree.tpp"
-
 #endif

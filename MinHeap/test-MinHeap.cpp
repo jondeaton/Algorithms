@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <random>
 
+using namespace std;
+
 void printHeap(MinHeap<int>& heap) {
   cout << "Contents: ";
 

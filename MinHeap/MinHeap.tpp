@@ -50,7 +50,7 @@ T MinHeap<T>::pop() {
 
 template <class T>
 T MinHeap<T>::peek() {
-  if (size() == 0) throw out_of_range ("MinHeap is empty");
+  if (size() == 0) throw std::out_of_range ("MinHeap is empty");
   return heap[0];
 }
 
