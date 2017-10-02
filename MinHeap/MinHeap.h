@@ -25,7 +25,7 @@ public:
    * Complexity: O(log(n))
    * @param element: The element to insert into the MinHeap
    */
-  void insert(T element);
+  void insert(const T& element);
 
   /**
    * Public method: pop

@@ -27,7 +27,7 @@ MinHeap<T>::MinHeap(T elements[]) {
 }
 
 template <class T>
-void MinHeap<T>::insert(T element) {
+void MinHeap<T>::insert(const T& element) {
   heap.push_back(element);
   bubbleUp(heap.size() - 1);
 }
