@@ -64,6 +64,13 @@ public:
    */
   size_t size() { return heap.size(); }
 
+  /**
+   * Public method: clear
+   * --------------------
+   * Empties the heap of all contents
+   */
+  void clear() { heap.clear(); }
+
 private:
   std::vector<T> heap;
 
@@ -71,6 +78,10 @@ private:
   void sinkDown(size_t index);
   void swap(size_t indexA, size_t indexB);
   bool search(const T& query, size_t start);
+
+  size_t leftOf(size_t index);
+  size_t rightOf(size_t index);
+  int parentOf(size_t index);
 };
 
 #include "MinHeap.tpp"

@@ -57,9 +57,9 @@ T MinHeap<T>::peek() {
 
 template <class T>
 void MinHeap<T>::bubbleUp(size_t index) {
-  if (index == 0) return; // no parent
-  int parent = (index + 1) / 2 - 1;
-  if (parent < 0) return;
+  if (index == 0) return; // at root
+
+  int parent = parentOf(index);
   if (heap[index] < heap[parent]) {
     swap(index, parent);
     bubbleUp(parent);
@@ -68,15 +68,15 @@ void MinHeap<T>::bubbleUp(size_t index) {
 
 template <class T>
 void MinHeap<T>::sinkDown(size_t index) {
-  size_t left = 2 * (index + 1) - 1;
-  size_t right = left + 1;
+  size_t left = leftOf(index); // Index of left child
+  size_t right = rightOf(index); // Index of right child
 
-  if (left >= size()) return;
+  if (left >= size()) return; // No children
 
-  if (heap[left] < heap[index]) {
+  if (heap[index] > heap[left] && heap[left] <= heap[right]) {
     swap(left, index);
     sinkDown(left);
-  } else if (heap[right] < heap[index]) {
+  } else if (heap[index] > heap[right] && heap[right] <= heap[left]) {
     swap(right, index);
     sinkDown(right);
   }
@@ -90,8 +90,23 @@ void MinHeap<T>::swap(size_t indexA, size_t indexB) {
 }
 
 template <class T>
-bool MinHeap<T>::search(const T &query, size_t start) {
+bool MinHeap<T>::search(const T& query, size_t start) {
   if (query < heap[start]) return false;
   if (query == heap[start]) return true;
-  return search(query, 2 * start) || search(query, 2 * start + 1);
+  return search(query, leftOf(start)) || search(query, rightOf(start));
+}
+
+template <class T>
+size_t MinHeap<T>::leftOf(size_t index) {
+  return 2 * (index + 1) - 1;
+}
+
+template <class T>
+size_t MinHeap<T>::rightOf(size_t index) {
+  return 1 + leftOf(index);
+}
+
+template <class T>
+int MinHeap<T>::parentOf(size_t index) {
+  return (index + 1) / 2 - 1;
 }
