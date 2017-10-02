@@ -5,9 +5,9 @@
  */
 
 template <class T>
-AVLTree<T>::AVLTree() { }
+AVLTree<T>::AVLTree() {}
 
 template <class T>
-void AVLTree<T>::insert(T element) {
+void AVLTree<T>::insert(const T& element) {
   (void) element;
 }

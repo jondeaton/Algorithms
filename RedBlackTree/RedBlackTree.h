@@ -5,8 +5,8 @@
  *
  */
 
-#ifndef DATASTRUCTURES_REDBLACKTREE_H
-#define DATASTRUCTURES_REDBLACKTREE_H
+#ifndef _redblacktree_h
+#define _redblacktree_h
 
 template <class T>
 class RedBlackTree {

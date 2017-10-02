@@ -10,12 +10,14 @@
 #include "BinaryNode.h"
 
 template <class T>
-class AVLTree<T> {
+class AVLTree {
+
 public:
 
   explicit AVLTree();
 
-  void insert(T& element);
+  void insert(const T& element);
+  void remove(const T& element);
 
 private:
   BinaryNode<T> root;

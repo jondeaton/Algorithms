@@ -4,27 +4,30 @@
  *
  */
 
-#ifndef _binady_node_H
+#ifndef _binary_node_h
 #define _binary_node_h
 
+#include <memory>
+
 template <class T>
-class BinaryNode<T> {
+class BinaryNode {
 
 public:
   T value;
 
   explicit BinaryNode();
-  explicit BinaryNode(T& value);
+  explicit BinaryNode(const T& value);
 
-  void insertLeft(T& value);
-  void insertRight(T& value);
+  void insert(const T& value);
+  void insertLeft(const T& value);
+  void insertRight(const T& value);
 
-  T& left();
-  T& right();
+  BinaryNode<T>& left();
+  BinaryNode<T>& right();
 
 private:
-  std::shared_ptr<BinaryNode<T>> left;
-  std::shared_ptr<BinaryNode<T>> right;
+  std::shared_ptr<BinaryNode<T>> leftNode;
+  std::shared_ptr<BinaryNode<T>> rightNode;
 };
 
 #include "BinaryNode.tpp"
