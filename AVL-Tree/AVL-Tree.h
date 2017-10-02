@@ -17,19 +17,19 @@ class AVLTree {
 
 public:
 
-  explicit AVLTree();
+    explicit AVLTree();
 
-  void insert(const T& element);
-  void remove(const T& element);
-  void contains(const T& query);
+    void insert(const T& element);
+    void remove(const T& element);
+    void contains(const T& query);
 
 private:
-  BinaryNode<T> root;
+    std::shared_ptr<BinaryNode<T>> root;
 
-  void leftRotate(const BinaryNode<T>& node);
-  void rightRotate(const BinaryNode<T>& node);
+    void leftRotate(const BinaryNode<T>& node);
+    void rightRotate(const BinaryNode<T>& node);
 
 };
 
-#include "AVL-Tree.tpp"
+#include "AVL-Tree.cpp"
 #endif

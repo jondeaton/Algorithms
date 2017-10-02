@@ -21,7 +21,6 @@ public:
 
   std::shared_ptr<BinaryNode<T>> left;
   std::shared_ptr<BinaryNode<T>> right;
-
 };
 
 template <class T>
