@@ -1,8 +1,23 @@
-//
-// Created by jdeaton on 9/26/2017.
-//
+/*
+ * File: RedBlackTree.h
+ * --------------------
+ * Presents the interface of a Red Black Tree data structure.
+ *
+ */
 
 #ifndef DATASTRUCTURES_REDBLACKTREE_H
 #define DATASTRUCTURES_REDBLACKTREE_H
 
-#endif //DATASTRUCTURES_REDBLACKTREE_H
+template <class T>
+class RedBlackTree {
+public:
+
+  explicit RedBlackTree();
+
+private:
+
+};
+
+#include "RedBlackTree.tpp"
+
+#endif

@@ -19,9 +19,7 @@ void printHeap(MinHeap<int>& heap) {
   cout << endl;
 }
 
-int main(int argc, char* argv[]) {
-  (void) argc;
-  (void) argv;
+int main() {
 
   MinHeap<int> heap;
 

@@ -17,7 +17,6 @@
  */
 
 #include <stdexcept>
-using namespace std;
 
 template <class T>
 MinHeap<T>::MinHeap() { }
