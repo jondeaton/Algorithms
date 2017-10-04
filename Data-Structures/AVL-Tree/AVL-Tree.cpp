@@ -118,23 +118,6 @@ BSTNode AVLTree<T>::search(BSTNode node, const T& element) {
 }
 
 /**
- * Private Method: rotateLeft
- * --------------------------
- * Rotates the tree counter-clockwise, returning the new root
- * @tparam T: Type of element stored in the tree node
- * @param node: Pointer to a binary search tree node to rotate
- * @return: The new root after having been rotated
- */
-template <class T>
-BSTNode AVLTree<T>::rotateLeft(BSTNode node) {
-    if (node->right == nullptr) return node; // Nothing to rotate onto
-    auto root = node->right;
-    node->right = node->right->left;
-    root->left = node;
-    return root;
-}
-
-/**
  * Private Method: balance
  * -----------------------
  * Balances the AVL tree so that the two children differ in height by no more than one
@@ -156,6 +139,23 @@ BSTNode AVLTree<T>::balance(BSTNode node) {
         if (leftBalance > 0) node->left = rotateLeft(node->left);
         return rightRotate(node);
     } else return node;
+}
+
+/**
+ * Private Method: rotateLeft
+ * --------------------------
+ * Rotates the tree counter-clockwise, returning the new root
+ * @tparam T: Type of element stored in the tree node
+ * @param node: Pointer to a binary search tree node to rotate
+ * @return: The new root after having been rotated
+ */
+template <class T>
+BSTNode AVLTree<T>::rotateLeft(BSTNode node) {
+    if (node->right == nullptr) return node; // Nothing to rotate onto
+    auto root = node->right;
+    node->right = node->right->left;
+    root->left = node;
+    return root;
 }
 
 /**
