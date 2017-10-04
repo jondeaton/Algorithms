@@ -185,10 +185,8 @@ BSTNode AVLTree<T>::rotateRight(BSTNode node) {
 template <class T>
 BSTNode AVLTree<T>::next(BSTNode node) {
     if (node == nullptr) return nullptr;
-    if (node->left == nullptr) {
-        if (node->right == nullptr) return node;
-        else return next(node->right);
-    } else return next(node->left);
+    if (node->left == nullptr) return node;
+    else return next(node->left);
 }
 
 /**
