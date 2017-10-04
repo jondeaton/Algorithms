@@ -148,7 +148,7 @@ BSTNode AVLTree<T>::balance(BSTNode node) {
 
     int netBalance = getNetBalance(node);
     if (netBalance > 1) { // right is heavy
-        int rightBalance = getNetBalance(node.right);
+        int rightBalance = getNetBalance(node->right);
         if (rightBalance < 0) node->right = rotateRight(node->right);
         return leftRotate(node);
     } else if (netBalance < 1) { // left is heavy
