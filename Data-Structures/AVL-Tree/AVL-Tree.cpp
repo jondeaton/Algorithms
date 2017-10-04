@@ -72,7 +72,7 @@ BSTNode AVLTree<T>::remove(BSTNode node, const T& value) {
         if (node->left == nullptr) return node->right;
         if (node->right == nullptr) return node->left;
         else {
-            node->value = next(node)->value;
+            node->value = next(node->right)->value;
             node->right = remove(node, node->value);
         }
     }
