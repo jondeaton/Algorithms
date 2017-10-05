@@ -24,17 +24,18 @@ public:
   T value;
   size_t height;
 
+  std::shared_ptr<BinaryNode<T>> left;
+  std::shared_ptr<BinaryNode<T>> right;
+
   explicit BinaryNode();
   explicit BinaryNode(const T& value);
 
-  std::shared_ptr<BinaryNode<T>> left;
-  std::shared_ptr<BinaryNode<T>> right;
 };
 
 template <class T>
-BinaryNode<T>::BinaryNode() : left(nullptr), right(nullptr) { }
+BinaryNode<T>::BinaryNode() : height(0), left(nullptr), right(nullptr) { }
 
 template <class T>
-BinaryNode<T>::BinaryNode(const T& value) : value(value), left(nullptr), right(nullptr) { }
+BinaryNode<T>::BinaryNode(const T& value) : value(value), height(0), left(nullptr), right(nullptr) { }
 
 #endif

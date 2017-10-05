@@ -165,7 +165,7 @@ Node<T> AVLTree<T>::balance(Node<T> node) {
         int rightBalance = getNetBalance(node->right);
         if (rightBalance < 0) node->right = rightRotate(node->right);
         return leftRotate(node);
-    } else if (netBalance < 1) { // left is heavy
+    } else if (netBalance < -1) { // left is heavy
         int leftBalance = getNetBalance(node->left);
         if (leftBalance > 0) node->left = leftRotate(node->left);
         return rightRotate(node);
