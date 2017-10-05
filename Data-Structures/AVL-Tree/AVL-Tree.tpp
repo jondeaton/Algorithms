@@ -49,7 +49,7 @@ Node<T> AVLTree<T>::search(const T& element) {
  */
 template <class T>
 Node<T> AVLTree<T>::insert(Node<T> node, const T& value) {
-    if (node == nullptr) return std::shared_ptr<BinaryNode<T>>(new BinaryNode(value));
+    if (node == nullptr) return std::shared_ptr<BinaryNode<T>>(new BinaryNode<T>(value));
 
     if (value < node->value) node->left = insert(node->left, value);
     if (value > node->value) node->right = insert(node->right, value);
@@ -97,7 +97,7 @@ Node<T> AVLTree<T>::remove(Node<T> node, const T& value) {
  * @return: True if the element is contained in the tree, false otherwise
  */
 template <class T>
-bool AVLTree<T>::contains(Node<T> node, const T& element) {
+bool AVLTree<T>::contains(const Node<T> node, const T& element) {
     if (node == nullptr) return false;
     if (node->value == element) return true;
     if (element < node->value) return contains(node->left, element);
@@ -139,17 +139,17 @@ Node<T> AVLTree<T>::balance(Node<T> node) {
     int netBalance = getNetBalance(node);
     if (netBalance > 1) { // right is heavy
         int rightBalance = getNetBalance(node->right);
-        if (rightBalance < 0) node->right = rotateRight(node->right);
+        if (rightBalance < 0) node->right = rightRotate(node->right);
         return leftRotate(node);
     } else if (netBalance < 1) { // left is heavy
         int leftBalance = getNetBalance(node->left);
-        if (leftBalance > 0) node->left = rotateLeft(node->left);
+        if (leftBalance > 0) node->left = leftRotate(node->left);
         return rightRotate(node);
     } else return node;
 }
 
 /**
- * Private Method: rotateLeft
+ * Private Method: leftRotate
  * --------------------------
  * Rotates the tree counter-clockwise, returning the new root
  * @tparam T: Type of element stored in the tree node
@@ -157,7 +157,7 @@ Node<T> AVLTree<T>::balance(Node<T> node) {
  * @return: The new root after having been rotated
  */
 template <class T>
-Node<T> AVLTree<T>::rotateLeft(Node<T> node) {
+Node<T> AVLTree<T>::leftRotate(Node<T> node) {
     if (node->right == nullptr) return node; // Nothing to rotate onto
     auto root = node->right;
     node->right = node->right->left;
@@ -166,7 +166,7 @@ Node<T> AVLTree<T>::rotateLeft(Node<T> node) {
 }
 
 /**
- * Private Method: rotateRight
+ * Private Method: rightRotate
  * --------------------------
  * Rotates the tree clockwise, returning the new root
  * @tparam T: Type of element stored in the tree node
@@ -174,7 +174,7 @@ Node<T> AVLTree<T>::rotateLeft(Node<T> node) {
  * @return: The new root after having been rotated
  */
 template <class T>
-Node<T> AVLTree<T>::rotateRight(Node<T> node) {
+Node<T> AVLTree<T>::rightRotate(Node<T> node) {
     if (node->left == nullptr) return node; // Nothing to rotate onto
     auto root = node->left;
     node->left = root->right;

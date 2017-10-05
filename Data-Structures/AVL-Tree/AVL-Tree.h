@@ -65,17 +65,16 @@ private:
   Node<T> insert(Node<T> node, const T& element);
   Node<T> remove(Node<T> node, const T& element);
   Node<T> search(const Node<T> node, const T& element);
-  Node<T> contains(const Node<T> node, const T& element);
+  bool contains(const Node<T> node, const T& element);
 
   Node<T> balance(Node<T> node);
   Node<T> leftRotate(Node<T> node);
   Node<T> rightRotate(Node<T> node);
   void updateHeight(Node<T> node);
   int getNetBalance(Node<T> node);
-
   Node<T> next(Node<T> node);
 };
 
-#include "AVL-Tree.cpp"
+#include "AVL-Tree.tpp"
 
 #endif
