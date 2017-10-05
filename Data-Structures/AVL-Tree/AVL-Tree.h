@@ -3,7 +3,7 @@
  * ----------------
  * Interface of a self-balancing Binary Search Tree (BST)
  *
- * This data structure guarantees O(log(N)) insertion, deletion, and search times
+ * This data structure guarantees O(log(N)) time complexity for insertion, deletion, and search
  * through self balancing in the insertion and deletion algorithms.
  */
 
@@ -14,7 +14,7 @@
 #include <memory>
 
 template <class T>
-using BSTNode = std::shared_ptr<BinaryNode<T>>;
+using Node = std::shared_ptr<BinaryNode<T>>;
 
 template <class T>
 class AVLTree {
@@ -57,23 +57,23 @@ public:
    * @param element: The element to search for
    * @return: A pointer to a node that contains an element equivalent to the specified node
    */
-  BSTNode<T> search(const T& element);
+  Node<T> search(const T& element);
 
 private:
-  BSTNode<T> root;
+  Node<T> root;
 
-  BSTNode<T> insert(BSTNode<T> node, const T& element);
-  BSTNode<T> remove(BSTNode<T> node, const T& element);
-  BSTNode<T> search(const BSTNode<T> node, const T& element);
-  BSTNode<T> contains(const BSTNode<T> node, const T& element);
+  Node<T> insert(Node<T> node, const T& element);
+  Node<T> remove(Node<T> node, const T& element);
+  Node<T> search(const Node<T> node, const T& element);
+  Node<T> contains(const Node<T> node, const T& element);
 
-  BSTNode<T> balance(BSTNode<T> node);
-  BSTNode<T> leftRotate(BSTNode<T> node);
-  BSTNode<T> rightRotate(BSTNode<T> node);
-  void updateHeight(BSTNode<T> node);
-  int getNetBalance(BSTNode<T> node);
+  Node<T> balance(Node<T> node);
+  Node<T> leftRotate(Node<T> node);
+  Node<T> rightRotate(Node<T> node);
+  void updateHeight(Node<T> node);
+  int getNetBalance(Node<T> node);
 
-  BSTNode<T> next(BSTNode<T> node);
+  Node<T> next(Node<T> node);
 };
 
 #include "AVL-Tree.cpp"
