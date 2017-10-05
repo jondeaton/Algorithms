@@ -16,7 +16,21 @@ int main() {
 
   for (int i = 0; i < 500; i++)
     tree.insert(i);
+  
+  tree.clear();
 
-//  tree.clear();
+
+  for (int i = 0; i < 1000; i++) {
+       tree.insert(random() % i);
+       tree.insert(random() % i);
+       tree.remove(i);
+  }
+
+  
+  for (int i = 0; i < 500; i++) {
+      tree.remove(random() % i);
+  }
+
+  tree.clear();
 
 }

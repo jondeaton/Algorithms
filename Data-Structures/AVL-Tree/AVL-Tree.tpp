@@ -51,9 +51,10 @@ template <class T>
 Node<T> AVLTree<T>::insert(Node<T> node, const T& value) {
     if (node == nullptr) return std::shared_ptr<BinaryNode<T>>(new BinaryNode<T>(value));
 
+    if (value == node->value) return node; // no duplicates
+
     if (value < node->value) node->left = insert(node->left, value);
     if (value > node->value) node->right = insert(node->right, value);
-    else return node; // no duplicates
 
     updateHeight(node);
     return balance(node);
@@ -162,6 +163,8 @@ Node<T> AVLTree<T>::leftRotate(Node<T> node) {
     auto root = node->right;
     node->right = node->right->left;
     root->left = node;
+    updateHeight(node);
+    updateHeight(root);
     return root;
 }
 
@@ -179,6 +182,8 @@ Node<T> AVLTree<T>::rightRotate(Node<T> node) {
     auto root = node->left;
     node->left = root->right;
     root->right = node;
+    updateHeight(node);
+    updateHeight(root);
     return root;
 }
 
@@ -206,6 +211,7 @@ Node<T> AVLTree<T>::next(Node<T> node) {
  */
 template <class T>
 void AVLTree<T>::updateHeight(Node<T> node) {
+    if (node == nullptr) return;
     int lh = node->left == nullptr ? -1 : node->left->height;
     int rh = node->right == nullptr ? -1 : node->right->height;
     node->height = 1 + (lh > rh ? lh : rh);
@@ -220,6 +226,7 @@ void AVLTree<T>::updateHeight(Node<T> node) {
  */
 template <class T>
 int AVLTree<T>::getNetBalance(const Node<T> node) {
+    if (node == nullptr) return 0;
     if (node->height == 0) return 0;
     if (node->right == nullptr) return - node->left->height;
     if (node->left == nullptr) return node->right->height;
