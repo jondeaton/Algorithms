@@ -47,4 +47,21 @@ int main() {
 
   tree.clear();
 
+
+  int numel = 1000000;
+  for (int i = 1; i <= numel; i++)
+      tree.insert(i);
+ 
+  cout << "Height after adding " << numel << " elements: " << tree.height() << endl;
+
+  if (!tree.verify()) cout << "Corrupted." << endl;
+
+  for (int i = 1; i <= numel; i++)
+      if (i % 2) tree.remove(i);
+
+  for (int i = 1; i <= numel; i++) {
+      if (i % 2 && tree.contains(i)) cout << "Error: " << i << endl;
+      if (!i % 2 && !tree.contains(i)) cout << "Error: " << i << endl;
+  }
+
 }
