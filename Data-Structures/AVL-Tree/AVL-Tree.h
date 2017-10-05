@@ -11,36 +11,68 @@
 #include <memory>
 
 template <class T>
-typedef std::shared_ptr<BinaryNode<T>> BSTNode;
+using BSTNode = std::shared_ptr<BinaryNode<T>>;
 
 template <class T>
 class AVLTree {
 
 public:
-    explicit AVLTree();
+  explicit AVLTree();
 
-    void insert(const T& element);
-    void remove(const T& element);
-    bool contains(const T& element);
-    BSTNode search(const T& element);
+  /**
+   * Public Method: insert
+   * ---------------------
+   * Insert a copy of an element into the Binary tree
+   * Time complexity: O(log(N))
+   * @param element: The element to insert
+   */
+  void insert(const T& element);
+
+  /**
+   * Public Method: remove
+   * ---------------------
+   * Remove an element from the binary tree
+   * Time complexity: O(log(N))
+   * @param element: The element to remove
+   */
+  void remove(const T& element);
+
+  /**
+   * Public Method: contains
+   * -----------------------
+   * Check if the binary tree contains an element
+   * Time complexity: O(log(N))
+   * @param element: The element to search for
+   * @return: True if the tree contains an element equivalent to the passed element
+   */
+  bool contains(const T& element);
+
+  /**
+   * Public Method: search
+   * ---------------------
+   * Retrieve a node from the tree containing a specified element
+   * @param element: The element to search for
+   * @return: A pointer to a node that contains an element equivalent to the specified node
+   */
+  BSTNode<T> search(const T& element);
 
 private:
-    BSTNode root;
+  BSTNode<T> root;
 
-    BSTNode insert(BSTNode node, const T& element);
-    BSTNode remove(BSTNode node, const T& element);
-    BSTNode search(const BSTNode node, const T& element);
-    BSTNode contains(const BSTNode node, const T& element);
+  BSTNode<T> insert(BSTNode<T> node, const T& element);
+  BSTNode<T> remove(BSTNode<T> node, const T& element);
+  BSTNode<T> search(const BSTNode<T> node, const T& element);
+  BSTNode<T> contains(const BSTNode<T> node, const T& element);
 
-    BSTNode balance(BSTNode node);
-    BSTNode leftRotate(BSTNode node);
-    BSTNode rightRotate(BSTNode node);
-    void updateHeight(BSTNode node);
-    int getNetBalance(BSTNode node);
+  BSTNode<T> balance(BSTNode<T> node);
+  BSTNode<T> leftRotate(BSTNode<T> node);
+  BSTNode<T> rightRotate(BSTNode<T> node);
+  void updateHeight(BSTNode<T> node);
+  int getNetBalance(BSTNode<T> node);
 
-    BSTNode next(BSTNode node);
-
+  BSTNode<T> next(BSTNode<T> node);
 };
 
 #include "AVL-Tree.cpp"
+
 #endif

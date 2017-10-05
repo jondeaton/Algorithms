@@ -6,12 +6,13 @@
  * nodes differs by no more than one.
  */
 
+// Constructor
 template <class T>
-AVLTree<T>::AVLTree() {}
+AVLTree<T>::AVLTree() { }
 
 template <class T>
 void AVLTree<T>::insert(const T& element) {
-    root = insert(root, elemnt);
+    root = insert(root, element);
 }
 
 template <class T>
@@ -20,12 +21,12 @@ void AVLTree<T>::remove(const T& element) {
 }
 
 template <class T>
-bool AVLTree<T>::contains(const T& elemnet) {
+bool AVLTree<T>::contains(const T& element) {
     return contains(root, element);
 }
 
 template <class T>
-BSTNode AVLTree<T>::search(const T& element) {
+BSTNode<T> AVLTree<T>::search(const T& element) {
     return search(root, element);
 }
 
@@ -41,7 +42,7 @@ BSTNode AVLTree<T>::search(const T& element) {
  * @return: The (possibly new) root of the BST after insertion and balancing
  */
 template <class T>
-BSTNode AVLTree<T>::insert(BSTNode node, const T& value) {
+BSTNode<T> AVLTree<T>::insert(BSTNode<T> node, const T& value) {
     if (node == nullptr) return std::shared_ptr<BinaryNode<T>>(new BinaryNode(value));
 
     if (value < node->value) node->left = insert(node->left, value);
@@ -62,7 +63,7 @@ BSTNode AVLTree<T>::insert(BSTNode node, const T& value) {
  * @return: A new node after the removal and rebalancing
  */
 template <class T>
-BSTNode AVLTree<T>::remove(BSTNode node, const T& value) {
+BSTNode<T> AVLTree<T>::remove(BSTNode<T> node, const T& value) {
     if (node == nullptr) return nullptr;
 
     if (value < node->value) node->left = remove(node->left, value);
@@ -90,8 +91,8 @@ BSTNode AVLTree<T>::remove(BSTNode node, const T& value) {
  * @return: True if the element is contained in the tree, false otherwise
  */
 template <class T>
-bool AVLTree<T>::contains(BSTNode node, const T& element) {
-    if (node == nullptr) return nullptr;
+bool AVLTree<T>::contains(BSTNode<T> node, const T& element) {
+    if (node == nullptr) return false;
     if (node->value == element) return true;
     if (element < node->value) return contains(node->left, element);
     if (element > node->value) return contains(node->right, element);
@@ -109,7 +110,7 @@ bool AVLTree<T>::contains(BSTNode node, const T& element) {
  * @return
  */
 template <class T>
-BSTNode AVLTree<T>::search(BSTNode node, const T& element) {
+BSTNode<T> AVLTree<T>::search(BSTNode<T> node, const T& element) {
     if (node == nullptr) return nullptr;
     if (node->value == element) return node;
     if (element < node->value) return search(node->left, element);
@@ -126,7 +127,7 @@ BSTNode AVLTree<T>::search(BSTNode node, const T& element) {
  * @return: The new root node after having balanced the tree
  */
 template <class T>
-BSTNode AVLTree<T>::balance(BSTNode node) {
+BSTNode<T> AVLTree<T>::balance(BSTNode<T> node) {
     if (node == nullptr) return nullptr;
 
     int netBalance = getNetBalance(node);
@@ -150,7 +151,7 @@ BSTNode AVLTree<T>::balance(BSTNode node) {
  * @return: The new root after having been rotated
  */
 template <class T>
-BSTNode AVLTree<T>::rotateLeft(BSTNode node) {
+BSTNode<T> AVLTree<T>::rotateLeft(BSTNode<T> node) {
     if (node->right == nullptr) return node; // Nothing to rotate onto
     auto root = node->right;
     node->right = node->right->left;
@@ -167,7 +168,7 @@ BSTNode AVLTree<T>::rotateLeft(BSTNode node) {
  * @return: The new root after having been rotated
  */
 template <class T>
-BSTNode AVLTree<T>::rotateRight(BSTNode node) {
+BSTNode<T> AVLTree<T>::rotateRight(BSTNode<T> node) {
     if (node->left == nullptr) return node; // Nothing to rotate onto
     auto root = node->left;
     node->left = root->right;
@@ -183,7 +184,7 @@ BSTNode AVLTree<T>::rotateRight(BSTNode node) {
  * @return: The next node in order
  */
 template <class T>
-BSTNode AVLTree<T>::next(BSTNode node) {
+BSTNode<T> AVLTree<T>::next(BSTNode<T> node) {
     if (node == nullptr) return nullptr;
     if (node->left == nullptr) return node;
     else return next(node->left);
@@ -197,7 +198,8 @@ BSTNode AVLTree<T>::next(BSTNode node) {
  * no children have a height of zero.
  * @param node: A node to update the height on
  */
-void AVLTree<T>::updateHeight(BinaryNode<T>& node) {
+template <class T>
+void AVLTree<T>::updateHeight(BSTNode<T> node) {
     int lh = node->left == nullptr ? -1 : node->left->height;
     int rh = node->right == nullptr ? -1 : node->right->height;
     node->height = 1 + (lh > rh ? lh : rh);
@@ -210,7 +212,8 @@ void AVLTree<T>::updateHeight(BinaryNode<T>& node) {
  * @param node: Node to get the net balance at
  * @return: Difference between height of right and left children
  */
-int AVLTree<T>::getNetBalance(const BinaryNode<T>& node) {
+template <class T>
+int AVLTree<T>::getNetBalance(const BSTNode<T> node) {
     if (node->height == 0) return 0;
     if (node->right == nullptr) return - node->left->height;
     if (node->left == nullptr) return node->right->height;
