@@ -6,6 +6,12 @@
  * nodes differs by no more than one.
  */
 
+#include "BinaryNode.h"
+#include <memory>
+
+template <class T>
+using BSTNode = std::shared_ptr<BinaryNode<T>>;
+
 // Constructor
 template <class T>
 AVLTree<T>::AVLTree() { }

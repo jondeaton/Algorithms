@@ -4,9 +4,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 SET(CMAKE_CXX_FLAGS "-g -O0 -Wall -Wextra -pedantic")
 
-set(SRC
+set(SRC BinaryNode.h
         AVL-Tree.h AVL-Tree.cpp
-        BinaryNode.h
         test-AVL.cpp)
 
 add_executable(test-tree ${SRC})

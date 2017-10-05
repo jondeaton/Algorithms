@@ -1,11 +1,14 @@
 /**
  * File: AVL-tree.h
  * ----------------
- * Interface of a self-balancing Binary Search Tree (BST).
+ * Interface of a self-balancing Binary Search Tree (BST)
+ *
+ * This data structure guarantees O(log(N)) insertion, deletion, and search times
+ * through self balancing in the insertion and deletion algorithms.
  */
 
-#ifndef _avl_tree_h
-#define _avl_tree_h
+#ifndef _AVLTree_H
+#define _AVLTree_H
 
 #include "BinaryNode.h"
 #include <memory>

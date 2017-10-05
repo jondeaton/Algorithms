@@ -1,11 +1,19 @@
 /*
  * File: BinaryNode.h
  * ------------------
+ * The interface of a binary node class useful in implementing binary tree
+ * data structures
  *
+ * A useful typedef is the following
+ *
+ * template <class T>
+ * using BSTNode = std::shared_ptr<BinaryNode<T>>;
+ *
+ * Then you can use BSTNode<T> which would be the type of say node.left
  */
 
-#ifndef _binary_node_h
-#define _binary_node_h
+#ifndef _BinaryNode_H
+#define _BinaryNode_H
 
 #include <memory>
 
@@ -24,9 +32,9 @@ public:
 };
 
 template <class T>
-BinaryNode<T>::BinaryNode() : leftNode(nullptr), rightNode(nullptr) { }
+BinaryNode<T>::BinaryNode() : left(nullptr), right(nullptr) { }
 
 template <class T>
-BinaryNode<T>::BinaryNode(const T& value) : value(value), leftNode(nullptr), rightNode(nullptr) { }
+BinaryNode<T>::BinaryNode(const T& value) : value(value), left(nullptr), right(nullptr) { }
 
 #endif
