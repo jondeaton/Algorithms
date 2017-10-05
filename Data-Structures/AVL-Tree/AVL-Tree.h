@@ -59,6 +59,13 @@ public:
    */
   Node<T> search(const T& element);
 
+  /**
+   * Public Method: clear
+   * --------------------
+   * Clears the tree of all contents
+   */
+  void clear() { root = nullptr; }
+
 private:
   Node<T> root;
 
