@@ -66,13 +66,35 @@ public:
    */
   void clear() { root = nullptr; }
 
-  // for testing...
+
+  /**
+   * Public Method: empty
+   * --------------------
+   * Check if the tree is empty
+   * @return: True if the heap is empty, false otherwise
+   */
+  bool empty() { return root == nullptr; }
+
+  /**
+   * Public Method: height
+   * ---------------------
+   * Returns the height of the tree, defined as 
+   * the number of edges on the longest path
+   * from the root to any leaf node.
+   * @return: The height of the tree
+   */
+  size_t height() { return empty() ? 0 : root->height; }
+
+  /**
+   * Public Method: verify
+   * ---------------------
+   * Verifies that the heap is properly formed and not corrupted
+   * @return: True if the heap is well-formed, false otherwise
+   */
   bool verify();
 
 private:
   Node<T> root;
-
-  bool verify(Node<T> node);
 
   Node<T> insert(Node<T> node, const T& element);
   Node<T> remove(Node<T> node, const T& element);
@@ -83,9 +105,10 @@ private:
   Node<T> leftRotate(Node<T> node);
   Node<T> rightRotate(Node<T> node);
   void updateHeight(Node<T> node);
-  int getNetBalance(Node<T> node);
-  Node<T> next(Node<T> node);
-  size_t getHeight(Node<T> node);
+  int getNetBalance(const Node<T> node);
+  Node<T> next(const Node<T> node);
+  size_t getHeight(const Node<T> node);
+  bool verify(const Node<T> node);
 };
 
 #include "AVL-Tree.tpp"

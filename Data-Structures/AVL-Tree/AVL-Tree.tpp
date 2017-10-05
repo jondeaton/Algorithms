@@ -41,24 +41,6 @@ bool AVLTree<T>::verify() {
   return verify(root);
 }
 
-template <class T>
-bool AVLTree<T>::verify(Node<T> node) {
-  if (node == nullptr) return true;
-  
-  if (node->height != getHeight(node)) return false;
-
-  if (node->left != nullptr && node->left->value >= node->value)
-      return false;
-
-  if (node->right != nullptr && node->right->value <= node->value)
-      return false;
-
-  int balance = getNetBalance(node);
-  if (balance < -1 || balance > 1) return false;
-
-  return verify(node->left) && verify(node->right);
-}
-
 // Private members
 
 /**
@@ -218,7 +200,7 @@ Node<T> AVLTree<T>::rightRotate(Node<T> node) {
  * @return: The next node in order
  */
 template <class T>
-Node<T> AVLTree<T>::next(Node<T> node) {
+Node<T> AVLTree<T>::next(const Node<T> node) {
     if (node == nullptr) return nullptr;
     if (node->left == nullptr) return node;
     else return next(node->left);
@@ -248,19 +230,57 @@ template <class T>
 int AVLTree<T>::getNetBalance(const Node<T> node) {
     if (node == nullptr) return 0;
     if (node->height == 0) return 0;
-    if (node->right == nullptr) return -1 - node->left->height;
+    if (node->right == nullptr) return -(1 + node->left->height);
     if (node->left == nullptr) return 1 + node->right->height;
     return node->right->height - node->left->height;
 }
 
 /**
- * 
-*/
+ * Private Method: getHeight
+ * -------------------------
+ * Re-calculates the height of a node to be one more than
+ * the maximum of the heights of it's two children. The height
+ * of a node with no children is defined to be zero. Note that
+ * this method will *not* change the height value stored in the node.
+ * @param node: The node to calculate the height of
+ * @return: The height of the node.
+ */
 template <class T>
-size_t AVLTree<T>::getHeight(Node<T> node) {
+size_t AVLTree<T>::getHeight(const Node<T> node) {
     if (node == nullptr) return 0;
     int lh = node->left == nullptr ? -1 : node->left->height;
     int rh = node->right == nullptr ? -1 : node->right->height;
     return 1 + (lh > rh ? lh : rh);
 }
 
+
+/**
+ * Private Method: verify
+ * ----------------------
+ * Verifies that a node is properly formed by checking to make sure that:
+ *  - It's height is equal to one more than the maximum of the heights of it's children
+ *  - It's value is strictly less than and greater than it's left child and right child's values, respectively.
+ *  - The heights of it's two chilcren differ by no more than one
+ *  - Both child nodes are properly formed
+ * @param node: The node to check for corruption
+ * @return: True if the node (and all of it's children) are well formed, false otherwise
+ */
+template <class T>
+bool AVLTree<T>::verify(const Node<T> node) {
+  if (node == nullptr) return true;
+  
+  if (node->height != getHeight(node))
+    return false;
+
+  if (node->left != nullptr && node->left->value >= node->value)
+      return false;
+
+  if (node->right != nullptr && node->right->value <= node->value)
+      return false;
+
+  int balance = getNetBalance(node);
+  if (balance < -1 || balance > 1)
+    return false;
+
+  return verify(node->left) && verify(node->right);
+}
