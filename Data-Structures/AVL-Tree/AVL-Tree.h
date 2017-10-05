@@ -66,8 +66,13 @@ public:
    */
   void clear() { root = nullptr; }
 
+  // for testing...
+  bool verify();
+
 private:
   Node<T> root;
+
+  bool verify(Node<T> node);
 
   Node<T> insert(Node<T> node, const T& element);
   Node<T> remove(Node<T> node, const T& element);
@@ -80,6 +85,7 @@ private:
   void updateHeight(Node<T> node);
   int getNetBalance(Node<T> node);
   Node<T> next(Node<T> node);
+  size_t getHeight(Node<T> node);
 };
 
 #include "AVL-Tree.tpp"
