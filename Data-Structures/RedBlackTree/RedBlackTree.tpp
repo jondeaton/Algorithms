@@ -13,6 +13,8 @@
 template <class T>
 using Node = std::shared_ptr<BinaryNode<T>>;
 
+enum Side {left, right};
+
 // Constructor
 template <class T>
 RedBlackTree<T>::RedBlackTree() { }
@@ -59,60 +61,48 @@ Node<T> RedBlackTree<T>::insert(Node<T> node, const T& value) {
   if (node == nullptr) return std::shared_ptr<BinaryNode<T>>(new BinaryNode<T>(value, color=red));
   if (value == node->value) return node; // no duplicates
 
-  if (node->color == red) {
-    if (value < node->value) {
-      node->left = insert(node->left, value);
-      if (node->left->color == red) {
+  if (value < node->value) { // regular insertion on the left
+      if (node->left == nullptr || node->left->color == black)
+        node->left = insert(node->left, value); // black insertion
+      else
+        node->left = insert(node->left, node, Left, value); // red insertion
 
-      }
+    } else { // regular insertion on the right
+      if (node->right == nullptr || node->right->color == black)
+        node->right = isnert(node->right, value);
+      else
+        node->left = insert(node->right, node, Right, value);
     }
-    if (value > node->value) node->right = insert(node->right, value);
-    updateHeight(node);
-    return node;
-  }
-
-  if (value < node->value) {
-    if (node->left == nullptr){
-      node->left = std::shared_ptr<BinaryNode<T>>(new BinaryNode<T>(value, color=red));
-      return node;
-    } else {
-      node->left = insert(node->left, value);
-    }
-  }
-
-  updateHeight(node);
+  
   return node;
 }
 
-
 template <class T>
-Node<T> RedBlackTree<T>::insert(Node<T> node, Node<T> parent, Node<T> uncle, const T& value) {
-  if (node == nullptr) return std::shared_ptr<BinaryNode<T>>(new BinaryNode<T>(value, color=red));
-  if (value == node->value) return node; // no duplicates
-
-  if (node->color == red) {
-    if (value < node->value) {
-      node->left = insert(node->left, value);
-      if (node->left->color == red) {
-        parent->color = red;
-        uncle->color = black;
-        node->color = black;
-        return node;
-      }
-    } else {
-      node->right = insert(node->right, value);
-      if (node->right->color == red) {
-        parent->color = red;
-        uncle->color = black;
-        node->color = black;
-        return node;
-      }
+Node<T> insert(Node<T> node, Node<T> parent, Side side, value) {
+  
+  if (value < node->value) {
+    node->left = insert(node->left, value); // child must be black
+    if (node->color == red) { // Insertion may have caused the black child to turn red
+      if (parent->right->color == red)
+        recolor(node, parent, side); // recolor if uncle is red
+      else
+        return rotate(parent, side, Left); // rotate if uncle is black
     }
   }
+
+  // Mirror image of the above logic
+  if (value > node->value) {
+    node->right = insert(node->right, value);
+    if (node->color == red) {
+      if (parent->left->color == red)
+        recolor(node, parent, side);
+      else
+        return rotate(parent, side, Right);
+    }
+  }
+
+  return node;
 }
-
-
-
 
 /**
  * Private Method: remove
@@ -167,29 +157,29 @@ Node<T> RedBlackTree<T>::search(Node<T> node, const T& element) {
   return nullptr;
 }
 
-/**
- * Private Method: balance
- * -----------------------
- * Balances the Red Black tree so that the two children differ in height by no more than one
- * @tparam T: The type of the elements stored in the nodes
- * @param node: The root node to balance about
- * @return: The new root node after having balanced the tree
- */
-template <class T>
-Node<T> RedBlackTree<T>::balance(Node<T> node) {
-  if (node == nullptr) return nullptr;
-
-  int netBalance = getNetBalance(node);
-  if (netBalance > 1) { // right is heavy
-    int rightBalance = getNetBalance(node->right);
-    if (rightBalance < 0) node->right = rightRotate(node->right);
-    return leftRotate(node);
-  } else if (netBalance < -1) { // left is heavy
-    int leftBalance = getNetBalance(node->left);
-    if (leftBalance > 0) node->left = leftRotate(node->left);
-    return rightRotate(node);
-  } else return node;
+void RedBlackTree<T>::recolor(Node<T> node) {
+  if (node == nullptr) return;
+  node->color = red;
+  if (node->left  != nullptr) node->left->color = black;
+  if (node->right != nullptr) node->right->color = black;
 }
+
+Node<T> RedBlackTree<T>::rotate(Node<T> node, Side side0, Side side1) {
+  if (side0 == left) {
+    if (side1 == right) node->left = leftRotate(node->left);
+    node->color = red;
+    node->left->color = black;
+    return rightRotate(node);
+  }
+
+  if (side0 == right) {
+    if (side1 == left) node->right = rightRotate(node->right);
+    node->color = red;
+    node->left->color = black;
+    return leftRotate(node);
+  }
+}
+
 
 /**
  * Private Method: leftRotate
@@ -205,8 +195,6 @@ Node<T> RedBlackTree<T>::leftRotate(Node<T> node) {
   auto root = node->right;
   node->right = node->right->left;
   root->left = node;
-  updateHeight(node);
-  updateHeight(root);
   return root;
 }
 
@@ -224,8 +212,6 @@ Node<T> RedBlackTree<T>::rightRotate(Node<T> node) {
   auto root = node->left;
   node->left = root->right;
   root->right = node;
-  updateHeight(node);
-  updateHeight(root);
   return root;
 }
 
@@ -305,18 +291,21 @@ template <class T>
 bool RedBlackTree<T>::verify(const Node<T> node) {
   if (node == nullptr) return true;
 
-  if (node->height != getHeight(node))
-    return false;
-
+  // Check for correct value placements
   if (node->left != nullptr && node->left->value >= node->value)
     return false;
 
   if (node->right != nullptr && node->right->value <= node->value)
     return false;
 
-  int balance = getNetBalance(node);
-  if (balance < -1 || balance > 1)
-    return false;
+  // Check for red violation
+  if (node->color == red) {
+    if (node->left != nullptr && node->left->color == red)
+      return false;
+    if (node->right != nullptr && node->right->color == red)
+      return false;
+  }
 
+  // todo: check for black height violation
   return verify(node->left) && verify(node->right);
 }
