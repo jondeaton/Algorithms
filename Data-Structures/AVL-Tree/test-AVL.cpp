@@ -33,7 +33,7 @@ int main() {
   for (int i = 1; i < 1000; i++) {
        tree.insert(random() % i);
        tree.insert(random() % i);
-       tree.remove(i);
+       tree.remove(random() % i);
        if (!tree.verify())
           cout << "error" << endl;
   }
