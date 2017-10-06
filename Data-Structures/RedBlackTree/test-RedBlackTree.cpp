@@ -4,7 +4,7 @@
  * For testing the AVL tree
  */
 
-#include "AVL-Tree.h"
+#include "RedBlackTree.h"
 #include <random>
 #include <stdio.h>
 #include <iostream>

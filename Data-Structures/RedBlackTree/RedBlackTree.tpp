@@ -254,14 +254,13 @@ size_t RedBlackTree<T>::getHeight(const Node<T> node) {
     return 1 + (lh > rh ? lh : rh);
 }
 
-
 /**
  * Private Method: verify
  * ----------------------
  * Verifies that a node is properly formed by checking to make sure that:
  *  - It's height is equal to one more than the maximum of the heights of it's children
  *  - It's value is strictly less than and greater than it's left child and right child's values, respectively.
- *  - The heights of it's two chilcren differ by no more than one
+ *  - The heights of it's two children differ by no more than one
  *  - Both child nodes are properly formed
  * @param node: The node to check for corruption
  * @return: True if the node (and all of it's children) are well formed, false otherwise
