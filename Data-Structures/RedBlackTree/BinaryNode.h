@@ -30,14 +30,13 @@ public:
   std::shared_ptr<BinaryNode<T>> left;
   std::shared_ptr<BinaryNode<T>> right;
 
-  explicit BinaryNode(const T& value=0, Color color=black);
-
+  explicit BinaryNode(const T& value, Color color=red);
 };
 
 template <class T>
 BinaryNode<T>::BinaryNode(const T& value, Color color) :
   value(value),
-  height(0),
+  height(1),
   color(color),
   left(nullptr),
   right(nullptr) { }

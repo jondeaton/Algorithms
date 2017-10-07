@@ -1,7 +1,7 @@
 /*
- * File: test-AVL.cpp
+ * File: test-RedBlackTree.cpp
  * ------------------
- * For testing the AVL tree
+ * For testing the Red Black tree
  */
 
 #include "RedBlackTree.h"
@@ -17,7 +17,7 @@ int main() {
   for (int i = 0; i < 6; i++) {
     tree.insert(i);
     if (!tree.verify())
-        cout << "error" << endl;
+        cout << "Error: " << i << endl;
   }
 
   tree.clear();

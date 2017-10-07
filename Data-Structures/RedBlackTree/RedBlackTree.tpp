@@ -8,6 +8,7 @@
  */
 
 #include "BinaryNode.h"
+#include "RedBlackTree.h"
 #include <memory>
 
 template <class T>
@@ -22,7 +23,7 @@ void RedBlackTree<T>::insert(const T& element) {
   root = insertAtBlack(root, element);
   if (root->color == red) {
     root->color = black;
-    root->height++;
+    updateHeight(root);
   }
 }
 
@@ -66,13 +67,13 @@ Node<T> RedBlackTree<T>::insertAtBlack(Node<T> node, const T& value) {
       if (node->left == nullptr || node->left->color == black)
         node->left = insertAtBlack(node->left, value); // black insertion
       else
-        node->left = insertAtRed(node->left, node, left, value); // red insertion
+        return insertAtRed(node->left, node, left, value); // red insertion
 
     } else { // regular insertion on the right
       if (node->right == nullptr || node->right->color == black)
         node->right = insertAtBlack(node->right, value);
       else
-        node->left = insertAtRed(node->right, node, right, value);
+        return insertAtRed(node->right, node, right, value);
     }
   
   return node;
@@ -83,10 +84,11 @@ Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, co
   if (value < node->value) {
     node->left = insertAtBlack(node->left, value); // child must be black
     if (node->color == red) { // Insertion may have caused the black child to turn red
-      if (parent->right->color == red)
+      if (parent->right != nullptr && parent->right->color == red)
         recolor(parent); // recolor if uncle is red
       else
         return rotate(parent, side, left); // rotate if uncle is black
+
     }
   }
 
@@ -94,7 +96,7 @@ Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, co
   if (value > node->value) {
     node->right = insertAtBlack(node->right, value);
     if (node->color == red) {
-      if (parent->left->color == red)
+      if (parent->left != nullptr && parent->left->color == red)
         recolor(parent);
       else
         return rotate(parent, side, right);
@@ -185,12 +187,10 @@ Node<T> RedBlackTree<T>::rotate(Node<T> node, Side side0, Side side1) {
     node->color = red;
     node->left->color = black;
     return rightRotate(node);
-  }
-
-  if (side0 == right) {
+  } else {
     if (side1 == left) node->right = rightRotate(node->right);
     node->color = red;
-    node->left->color = black;
+    node->right->color = black;
     return leftRotate(node);
   }
 }
@@ -272,11 +272,8 @@ void RedBlackTree<T>::updateHeight(Node<T> node) {
 template <class T>
 size_t RedBlackTree<T>::getHeight(const Node<T> node) {
   if (node == nullptr) return 1;
-  int selfHeight = node->color == black ? 1 : 0;
-  if (node->left == nullptr)
-    return selfHeight + 1;
-  else
-    return selfHeight + node->left->height;
+  if (node->left == nullptr) return 1;
+  return node->left->height + (node->color == black ? 1 : 0);
 }
 
 /**
