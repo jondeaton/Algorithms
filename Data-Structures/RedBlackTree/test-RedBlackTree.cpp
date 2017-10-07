@@ -13,22 +13,21 @@ using namespace std;
 
 int main() {
   RedBlackTree<int> tree;
-  tree.insert(5);
 
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 6; i++) {
     tree.insert(i);
     if (!tree.verify())
         cout << "error" << endl;
   }
+
+  tree.clear();
+  return 1;
 
   for (int i = 0; i < 500; i++){
     tree.insert(i);
     if (!tree.verify())
         cout << "error" << endl;
   }
-  
-  tree.clear();
-
 
   for (int i = 1; i < 1000; i++) {
        tree.insert(random() % i);

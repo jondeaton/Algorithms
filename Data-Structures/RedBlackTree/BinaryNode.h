@@ -25,7 +25,6 @@ class BinaryNode {
 public:
   T value;
   size_t height;
-
   Color color;
 
   std::shared_ptr<BinaryNode<T>> left;

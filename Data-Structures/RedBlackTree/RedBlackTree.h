@@ -14,6 +14,8 @@
 template <class T>
 using Node = std::shared_ptr<BinaryNode<T>>;
 
+enum Side {left, right};
+
 template <class T>
 class RedBlackTree {
 
@@ -94,12 +96,15 @@ public:
 private:
   Node<T> root;
 
-  Node<T> insert(Node<T> node, const T& element);
+  Node<T> insertAtBlack(Node<T> node, const T& element);
+  Node<T> insertAtRed(Node<T> node, Node<T> parent, Side side, const T& value);
   Node<T> remove(Node<T> node, const T& element);
   Node<T> search(const Node<T> node, const T& element);
   bool contains(const Node<T> node, const T& element);
 
-  Node<T> balance(Node<T> node);
+  void recolor(Node<T> node);
+  Node<T> rotate(Node<T> node, Side side0, Side side1);
+
   Node<T> leftRotate(Node<T> node);
   Node<T> rightRotate(Node<T> node);
   void updateHeight(Node<T> node);
