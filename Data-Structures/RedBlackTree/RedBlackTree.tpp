@@ -87,7 +87,7 @@ Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, co
       if (parent->right != nullptr && parent->right->color == red)
         recolor(parent); // recolor if uncle is red
       else
-        return rotate(parent, side, left); // rotate if uncle is black
+        return balance(parent, side, left); // rotate if uncle is black
 
     }
   }
@@ -99,7 +99,7 @@ Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, co
       if (parent->left != nullptr && parent->left->color == red)
         recolor(parent);
       else
-        return rotate(parent, side, right);
+        return balance(parent, side, right);
     }
   }
   return node;
@@ -117,8 +117,23 @@ Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, co
 template <class T>
 Node<T> RedBlackTree<T>::remove(Node<T> node, const T& value) {
   if (node == nullptr) return nullptr;
-  // TODO
-  (void) value;
+
+  if (value < node->value) return remove(node->left, value);
+  if (value > node->value) return remove(node->right, value);
+
+  if (node->left != nullptr && node->right != nullptr) {
+    node->value = next(node->right)->value;
+    node->right = remove(node->right, value);
+  }
+
+  if (node->left != nullptr) {
+    if (node->color == red || node->left->color == red) {
+      node->left->color = red;
+      return node->left;
+    } else { // both are black
+
+    }
+  }
 
   return nullptr;
 }
@@ -160,9 +175,11 @@ Node<T> RedBlackTree<T>::search(Node<T> node, const T& element) {
 }
 
 /**
- *
- * @tparam T
- * @param node
+ * Private Method: recolor
+ * -----------------------
+ * Recolors the node to be red, and it's children to be black
+ * @tparam T: The type of element stored in the node
+ * @param node: The node to recolor
  */
 template <class T>
 void RedBlackTree<T>::recolor(Node<T> node) {
@@ -173,15 +190,17 @@ void RedBlackTree<T>::recolor(Node<T> node) {
 }
 
 /**
- *
- * @tparam T
- * @param node
- * @param side0
- * @param side1
- * @return
+ * Private Method: balance
+ * ----------------------
+ * Rotates the tree at the given node in order to re-balance it
+ * @tparam T: The type of element stored in each node
+ * @param node: The node to rotate about.
+ * @param side0: The direction that the node needs to be rotates away from
+ * @param side1: The direction that the child of the node is leaning
+ * @return: The new root node after the tree been balanced
  */
 template <class T>
-Node<T> RedBlackTree<T>::rotate(Node<T> node, Side side0, Side side1) {
+Node<T> RedBlackTree<T>::balance(Node<T> node, Side side0, Side side1) {
   if (side0 == left) {
     if (side1 == right) node->left = leftRotate(node->left);
     node->color = red;

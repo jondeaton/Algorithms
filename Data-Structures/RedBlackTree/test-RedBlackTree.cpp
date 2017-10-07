@@ -14,7 +14,7 @@ using namespace std;
 int main() {
   RedBlackTree<int> tree;
 
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 600; i++) {
     tree.insert(i);
     if (!tree.verify())
         cout << "Error: " << i << endl;

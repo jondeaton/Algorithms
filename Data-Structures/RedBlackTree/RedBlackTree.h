@@ -103,12 +103,11 @@ private:
   bool contains(const Node<T> node, const T& element);
 
   void recolor(Node<T> node);
-  Node<T> rotate(Node<T> node, Side side0, Side side1);
+  Node<T> balance(Node<T> node, Side side0, Side side1);
 
   Node<T> leftRotate(Node<T> node);
   Node<T> rightRotate(Node<T> node);
   void updateHeight(Node<T> node);
-  int getNetBalance(const Node<T> node);
   Node<T> next(const Node<T> node);
   size_t getHeight(const Node<T> node);
   bool verify(const Node<T> node);
