@@ -79,7 +79,8 @@ Node<T> RedBlackTree<T>::insertAtBlack(Node<T> node, const T& value) {
       else
         return insertAtRed(node->right, node, right, value);
     }
-  
+
+  updateHeight(node);
   return node;
 }
 
@@ -103,36 +104,48 @@ Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, co
         recolor(parent); // recolor if uncle is red
       else
         return balance(parent, side, left); // rotate if uncle is black
-
     }
   }
 
   // Mirror image of the above logic
   if (value > node->value) {
     node->right = insertAtBlack(node->right, value);
-    if (node->color == red) {
+    if (node->color == red) { // It may have changed color!
       if (parent->left != nullptr && parent->left->color == red)
-        recolor(parent);
+        recolor(parent); // Has red sibiling
       else
         return balance(parent, side, right);
     }
   }
-  return node;
+
+  updateHeight(parent);
+  return parent;
 }
 
 /**
  * Private Method: recolor
  * -----------------------
- * Recolors the node to be red, and it's children to be black
+ * Recolors the node to be red, and it's children to be black, and updates
+ * the black heights of each of these nodes.
  * @tparam T: The type of element stored in the node
- * @param node: The node to recolor
+ * @param node: The node to recolor along with its children
  */
 template <class T>
 void RedBlackTree<T>::recolor(Node<T> node) {
   if (node == nullptr) return;
+
+  if (node->left  != nullptr) {
+    node->left->color = black;
+    updateHeight(node->left);
+  }
+
+  if (node->right != nullptr) {
+    node->right->color = black;
+    updateHeight(node->right);
+  }
+
   node->color = red;
-  if (node->left  != nullptr) node->left->color = black;
-  if (node->right != nullptr) node->right->color = black;
+  updateHeight(node);
 }
 
 /**
@@ -148,12 +161,13 @@ void RedBlackTree<T>::recolor(Node<T> node) {
 template <class T>
 Node<T> RedBlackTree<T>::balance(Node<T> node, Side side0, Side side1) {
   if (side0 == left) {
-    if (side1 == right) node->left = leftRotate(node->left);
+    if (side1 == right) node->left = rotate(node->left, left);
     node->color = red;
     node->left->color = black;
     return rotate(node, right);
+
   } else {
-    if (side1 == left) node->right = rightRotate(node->right);
+    if (side1 == left) node->right = rotate(node->right, right);
     node->color = red;
     node->right->color = black;
     return rotate(node, left);
@@ -176,12 +190,14 @@ Node<T> RedBlackTree<T>::remove(Node<T> node, const T& value) {
   // Haven't yet found the node to remove
   if (value < node->value) {
     node->left = remove(node->left, value);
-    if (node->left->color == doubleBlack) return fixDoubleBlack(node, left);
+    if (node->left->color == doubleBlack)
+      return fixDoubleBlack(node, left);
     else return node;
   }
   if (value > node->value) {
     node->right = remove(node->right, value);
-    if (node->right->color == doubleBlack) return fixDoubleBlack(node, right);
+    if (node->right->color == doubleBlack)
+      return fixDoubleBlack(node, right);
     else return node;
   }
 
@@ -231,13 +247,12 @@ Node<T> RedBlackTree<T>::remove(Node<T> node, const T& value) {
  * @tparam T: Type of element stored in the node
  * @param node: The double black node to fix
  * @param parent: The parent of the double black node
- * @param side: The side of the parent that the double black node is on
+ * @param side: The side of the parent that the double black node IS on
  * @return: New parent after fixing the double black node (may itself have turned double black!)
  */
 template <class T>
 Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
-  Node<T> db = side == left ? node->left : node->right;
-  Node<T> sibiling = side == left ? node->right : node->left;
+  Node<T> sibiling = childOf(node, otherSide(side));
 
   // Red sibiling
   if (sibiling->color == red) {
@@ -249,7 +264,8 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
 
   Side redChildSide = redChild(sibiling);
   if (redChildSide != none) {
-    return rotateDoubleBlack(node, side, redChildSide);
+    childOf(node, side)->color = black; // <-- turn double black into single black
+    return rotateDoubleBlack(node, otherSide(side), redChildSide);
   } else {
     node->color = doubleBlack;
     sibiling->color = red;
@@ -269,24 +285,32 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
  */
 template <class T>
 Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1) {
+
   if (side0 == left) {
     if (side1 == left) { // Left Left
-      node->right->color = red;
-      node->right->left->color = black;
-      node->left = rotate(node->left, left);
+      node->left->right->color = black; // turn the double black node to black
+      return rotate(node, right);
+
     } else { // Left right
-      node->left->left->color = black; // turn the double black node to black
-      node->right->right->color = red;
-      return rotate(node, left);
-    }
-  } else {
-    if (side1 == left) { // Right left
       node->left->color = red;
       node->left->right->color = black;
-      node->right = rotate(node->right, right);
+      node->left = rotate(node->left, left); // <-- rotate sub-tree
+
+      node->left->left->color = black;
+      return rotate(node, left);
+    }
+
+  } else {
+    if (side1 == left) { // Right left
+      node->right->color = red;
+      node->right->left->color = black;
+      node->right = rotate(node->right, right); // <-- rotate sub-tree
+
+      node->right->right->color = black;
+      return rotate(node, left);
+
     } else { // Right right
-      node->left->left->color = black; // turn the double black node to black
-      node->right->right->color = red;
+      node->right->right->color = black; // turn the double black node to black
       return rotate(node, left);
     }
   }
@@ -419,9 +443,10 @@ void RedBlackTree<T>::updateHeight(Node<T> node) {
  */
 template <class T>
 size_t RedBlackTree<T>::getHeight(const Node<T> node) {
-  if (node == nullptr) return 1;
-  if (node->left == nullptr) return 1;
-  return node->left->height + (node->color == black ? 1 : 0);
+  if (node == nullptr) return 1; // Null nodes are black
+  size_t selfHeight = node->color == black ? 1 : 0;
+  if (node->left == nullptr) return 1 + selfHeight;
+  else return selfHeight + node->left->height;
 }
 
 /**

@@ -34,11 +34,9 @@ public:
 };
 
 template <class T>
-BinaryNode<T>::BinaryNode(const T& value, Color color) :
-  value(value),
-  height(1),
-  color(color),
-  left(nullptr),
-  right(nullptr) { }
+BinaryNode<T>::BinaryNode(const T& value, Color color) : value(value), color(color),
+                                                         left(nullptr), right(nullptr) {
+  height = color == black ? 2 : 1;
+}
 
 #endif

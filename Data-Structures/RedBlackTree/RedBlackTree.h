@@ -112,8 +112,6 @@ private:
   Node<T> leftRotate(Node<T> node);
   Node<T> rightRotate(Node<T> node);
 
-
-
   void updateHeight(Node<T> node);
   Node<T> next(const Node<T> node);
   Node<T> childOf(const Node<T> node, Side side);
