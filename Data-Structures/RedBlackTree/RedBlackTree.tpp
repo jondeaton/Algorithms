@@ -424,12 +424,30 @@ size_t RedBlackTree<T>::getHeight(const Node<T> node) {
   return node->left->height + (node->color == black ? 1 : 0);
 }
 
+/**
+ * Private Method: childOf
+ * -----------------------
+ * For getting the child of a node at a specific side
+ * @tparam T: The type of element stored in the node
+ * @param node: The node to get the child of
+ * @param side: The side of the node to get a child from
+ * @return: The child of the node on the specified side
+ */
 template <class T>
 Node<T> RedBlackTree<T>::childOf(const Node<T> node, Side side) {
   if (side == left) return node->left;
   if (side == right) return node->left;
+  return node;
 }
 
+/**
+ * Private Method: otherSide
+ * -------------------------
+ * Turns left into right and right into left
+ * @tparam T: The type of element stored in the red black tree
+ * @param side: The side to invert
+ * @return: Left if right is passed and vice versa.
+ */
 template <class T>
 Side RedBlackTree<T>::otherSide(Side side) {
   return side == left ? right : left;
