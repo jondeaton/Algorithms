@@ -525,11 +525,15 @@ bool RedBlackTree<T>::verify(const Node<T> node) {
   }
 
   // Check for incorrect heights
-  if (node->height != getHeight(node))
+  size_t expectedHeight = getHeight(node);
+  if (node->height != expectedHeight){
     return false;
+  }
 
   // Check for height violation
-  if (getHeight(node->left) != getHeight(node->right))
+  size_t leftHeight =  getHeight(node->left);
+  size_t rightHeight = getHeight(node->right);
+  if (leftHeight != rightHeight)
     return false;
 
   return verify(node->left) && verify(node->right);
