@@ -259,6 +259,7 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
     return rotateDoubleBlack(node, otherSide(side), redChildSide);
   } else {
     sibiling->color = red;
+    updateHeight(sibiling);
     updateHeight(node);
     return node;
   }
@@ -420,6 +421,7 @@ Node<T> RedBlackTree<T>::next(const Node<T> node) {
  */
 template <class T>
 void RedBlackTree<T>::updateHeight(Node<T> node) {
+  if (node == nullptr) return;
   node->height = getHeight(node);
 }
 
