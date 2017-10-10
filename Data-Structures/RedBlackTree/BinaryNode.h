@@ -17,7 +17,7 @@
 
 #include <memory>
 
-enum Color {red, black, doubleBlack};
+enum Color { red, black };
 
 template <class T>
 class BinaryNode {

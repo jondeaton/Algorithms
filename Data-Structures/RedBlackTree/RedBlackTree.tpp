@@ -189,57 +189,47 @@ template <class T>
 Node<T> RedBlackTree<T>::remove(Node<T> node, const T& value) {
   if (node == nullptr) return nullptr;
 
-  // Haven't yet found the node to remove
+  // Search and remove from left
   if (value < node->value) {
     node->left = remove(node->left, value);
-    if (node->left->color == doubleBlack)
+    if (getHeight(node->left) < getHeight(node->right)) // Left is double black
       return fixDoubleBlack(node, left);
-    else return node;
+    else {
+        updateHeight(node);
+        return node;
+    }
   }
+
+  // Search and remove from right
   if (value > node->value) {
     node->right = remove(node->right, value);
-    if (node->right->color == doubleBlack)
-      return fixDoubleBlack(node, right);
-    else return node;
+    if (getHeight(node->right) < getHeight(node->left)) // Right is double black
+        return fixDoubleBlack(node, right);
+    else {
+        updateHeight(node);
+        return node;
+    }
   }
 
   // Removal of a leaf: doesn't matter if its red or black
-  if (node->left == nullptr && node->right == nullptr) return nullptr;
+  if (node->left == nullptr && node->right == nullptr)
+      return nullptr;
 
   // Node has two children
   if (node->left != nullptr && node->right != nullptr) {
     node->value = next(node->right)->value;
     node->right = remove(node->right, value);
-    if (node->right->color == doubleBlack)
+    if (getHeight(node->right) < getHeight(node->left)) // right is double black
       return fixDoubleBlack(node, right);
-    else return node;
-  }
-
-  // Single left side
-  if (node->left != nullptr) {
-
-    // Either node or it's left child is red: just turn child black and return
-    if (node->color == red || node->left->color == red) {
-      node->left->color = red;
-      return node->left;
-    } else { // both are black
-      node->left->color = doubleBlack;
-      return node->left;
+    else {
+        updateHeight(node);
+        return node;
     }
   }
 
-  // Single right side
-  if (node->right != nullptr) {
-    if(node->color == red || node->right->color == red) {
-      node->right->color = red;
-      return node->right;
-    } else { // both are black
-      node->right->color = doubleBlack;
-      return node->right;
-    }
-  }
-
-  return nullptr; // this shouldn't happen
+  // Node has a single child
+  if (node->left != nullptr) return node->left;
+  else return node->right;
 }
 
 /**
@@ -264,13 +254,13 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
     return rotate(node, side);
   }
 
+  // Black sibiling
   Side redChildSide = redChild(sibiling);
   if (redChildSide != none) {
-    childOf(node, side)->color = black; // <-- turn double black into single black
     return rotateDoubleBlack(node, otherSide(side), redChildSide);
   } else {
-    node->color = doubleBlack;
     sibiling->color = red;
+    updateHeight(node);
     return node;
   }
 }
