@@ -420,6 +420,23 @@ Node<T> RedBlackTree<T>::next(const Node<T> node) {
 }
 
 /**
+ * Private Method: setColor
+ * ------------------------
+ * Sets the color of a node while also update it's height accordingly
+ * @param node: The node to set the color of
+ * @param color: The color to paint the node
+ */
+template <class T>
+void RedBlackTree<T>::setColor(Node<T> node, Color color) {
+    if (node == nullptr) return;
+    if (node->color == color) return;
+
+    if (color == red) node->height--; // demotion
+    else node->height++; // promotion
+    node->color = color;
+}
+
+/**
  * Private Method: updateHeight
  * ----------------------------
  * Updates the height of a node to be the one plus the maximum of the heights of it's two children. Nodes with
