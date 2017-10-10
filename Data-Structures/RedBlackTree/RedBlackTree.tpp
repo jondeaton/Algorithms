@@ -248,8 +248,9 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
 
   // Red sibiling
   if (sibiling->color == red) {
-    node->color = red;
     sibiling->color = black;
+    childOf(sibiling, side)->color = red;
+    updateHeight(childOf(sibiling, side));
     return rotate(node, side);
   }
 
