@@ -282,14 +282,17 @@ Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1)
   if (side0 == left) {
     if (side1 == left) { // Left Left
       node->left->right->color = black; // turn the double black node to black
+      updateHeight(node->left->right);
       return rotate(node, right);
 
     } else { // Left right
       node->left->color = red;
       node->left->right->color = black;
+      updateHeight(node->left->right);
       node->left = rotate(node->left, left); // <-- rotate sub-tree
 
       node->left->left->color = black;
+      updateHeight(node->left->left);
       return rotate(node, left);
     }
 
@@ -297,13 +300,16 @@ Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1)
     if (side1 == left) { // Right left
       node->right->color = red;
       node->right->left->color = black;
+      updateHeight(node->right->left);
       node->right = rotate(node->right, right); // <-- rotate sub-tree
 
       node->right->right->color = black;
+      updateHeight(node->right->right);
       return rotate(node, left);
 
     } else { // Right right
       node->right->right->color = black; // turn the double black node to black
+      updateHeight(node->right->right);
       return rotate(node, left);
     }
   }
