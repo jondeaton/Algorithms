@@ -99,8 +99,9 @@ template <class T>
 Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, const T& value) {
   if (value < node->value) {
     node->left = insertAtBlack(node->left, value); // child must be black
-    if (node->color == red) { // Insertion may have caused the black child to turn red
-      if (parent->right != nullptr && parent->right->color == red)
+    if (node->left->color == red) { // Insertion may have caused the black child to turn red
+      Node<T> uncle = childOf(parent, otherSide(side));
+      if (uncle != nullptr && uncle->color == red)
         recolor(parent); // recolor if uncle is red
       else
         return balance(parent, side, left); // rotate if uncle is black
@@ -110,11 +111,12 @@ Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, co
   // Mirror image of the above logic
   if (value > node->value) {
     node->right = insertAtBlack(node->right, value);
-    if (node->color == red) { // It may have changed color!
-      if (parent->left != nullptr && parent->left->color == red)
-        recolor(parent); // Has red sibiling
+    if (node->right->color == red) { // It may have changed color!
+      Node<T> uncle = childOf(parent, otherSide(side));
+      if (uncle != nullptr && uncle->color == red)
+        recolor(parent); // Red uncle: simple recoloring
       else
-        return balance(parent, side, right);
+        return balance(parent, side, right); // Black uncle: rotations
     }
   }
 
@@ -461,7 +463,7 @@ size_t RedBlackTree<T>::getHeight(const Node<T> node) {
 template <class T>
 Node<T> RedBlackTree<T>::childOf(const Node<T> node, Side side) {
   if (side == left) return node->left;
-  if (side == right) return node->left;
+  if (side == right) return node->right;
   return node;
 }
 
