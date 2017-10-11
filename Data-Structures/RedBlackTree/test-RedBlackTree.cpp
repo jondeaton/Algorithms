@@ -93,13 +93,20 @@ void randomizedRemoval() {
 
 void mixedInsertionRemoval() {
   RedBlackTree<int> tree;
-  for (int i = 0; i < 100000; i++) {
+  for (int i = 0; i < 1000; i++) {
     tree.insert((int) random());
     tree.insert((int) random());
     tree.remove((int) random());
+    for (int j = 0; j < 100; j++){
+        tree.insert((int) random());
+        tree.insert((int) random());
+        tree.remove((int) random());
+        tree.remove((int) random());
+    }
+
+    if (!tree.verify())
+        cout << "Error: " << i << endl;
   }
-  if (!tree.verify())
-    cout << "Error mixed insertion removal." << endl;
 }
 
 int main() {
