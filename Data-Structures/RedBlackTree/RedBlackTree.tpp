@@ -242,7 +242,7 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
     setColor(sibiling, black);
     setColor(node, red);
 
-    auto root = rotate(node, side);
+    Node<T> root = rotate(node, side);
     if (side == left)
       root->left = fixDoubleBlack(root->left, side);
     else
@@ -424,9 +424,9 @@ template <class T>
 void RedBlackTree<T>::setColor(Node<T> node, Color color) {
   if (node == nullptr) return; // nothing to do
   if (node->color == color) return; // nothing to do
+  node->color = color;
   if (color == red) node->height--; // demotion
   else node->height++; // promotion
-  node->color = color;
 }
 
 /**
