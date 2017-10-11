@@ -21,13 +21,13 @@ RedBlackTree<T>::RedBlackTree() { }
 template <class T>
 void RedBlackTree<T>::insert(const T& element) {
   root = insertAtBlack(root, element);
-  root->setColor(black);
+  if (root != nullptr) root->setColor(black);
 }
 
 template <class T>
 void RedBlackTree<T>::remove(const T& element) {
   root = remove(root, element);
-  root->setColor(black);
+  if (root != nullptr) root->setColor(black);
 }
 
 template <class T>
@@ -178,7 +178,7 @@ Node<T> RedBlackTree<T>::balance(Node<T> node, Side side0, Side side1) {
  */
 template <class T>
 Node<T> RedBlackTree<T>::remove(Node<T> node, const T& value) {
-  if (node == nullptr) return nullptr;
+  if (node == nullptr) return nullptr; // not present in the tree
 
   // Search and remove from left
   if (value < node->value) {
@@ -209,7 +209,7 @@ Node<T> RedBlackTree<T>::remove(Node<T> node, const T& value) {
   // Node has two children
   if (node->left != nullptr && node->right != nullptr) {
     node->value = next(node->right)->value;
-    node->right = remove(node->right, value);
+    node->right = remove(node->right, node->value);
     if (getHeight(node->right) < getHeight(node->left)) // right is double black
       return fixDoubleBlack(node, right);
     else {
@@ -251,6 +251,7 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
   } else {
     sibiling->setColor(red);
     updateHeight(node);
+    node->setColor(black); // <-- just turned double black
     return node;
   }
 }
