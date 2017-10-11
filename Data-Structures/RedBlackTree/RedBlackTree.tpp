@@ -243,10 +243,15 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
     setColor(node, red);
 
     Node<T> root = rotate(node, side);
-    if (side == left)
-      root->left = fixDoubleBlack(root->left, side);
-    else
+    if (side == left) {
+        root->left = fixDoubleBlack(root->left, side);
+        if (getHeight(root->left) < getHeight(root->right))
+            return fixDoubleBlack(root, left);
+    } else {
       root->right = fixDoubleBlack(root->right, side);
+      if (getHeight(root->right) < getHeight(root->left))
+          return fixDoubleBlack(root, right);
+    }
     updateHeight(root);
     return root;
   }
@@ -279,6 +284,10 @@ Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1)
   if (side0 == left) {
     if (side1 == left) { // Left Left
       setColor(node->left->left, black);
+      if (node->color == red) {
+          setColor(node, black);
+          setColor(node->left, red);
+      }
       return rotate(node, right);
 
     } else { // Left right
@@ -286,6 +295,11 @@ Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1)
       setColor(node->left->right, black);
       node->left = rotate(node->left, left); // <-- rotate sub-tree
       updateHeight(node->left);
+
+      if (node->color == red) {
+          setColor(node, black);
+          setColor(node->left, red);
+      }
 
       setColor(node->left->left, black);
       return rotate(node, right);
@@ -298,11 +312,20 @@ Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1)
       node->right = rotate(node->right, right); // <-- rotate sub-tree
       updateHeight(node->right);
 
+      if (node->color == red) {
+          setColor(node, black);
+          setColor(node->right, red);
+      }
+
       setColor(node->right->right, black);
       return rotate(node, left);
 
     } else { // Right right
       setColor(node->right->right, black);
+      if (node->color == red) {
+          setColor(node, black);
+          setColor(node->right, red);
+      }
       return rotate(node, left);
     }
   }
