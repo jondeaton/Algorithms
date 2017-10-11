@@ -97,9 +97,9 @@ void mixedInsertionRemoval() {
     tree.insert((int) random());
     tree.insert((int) random());
     tree.remove((int) random());
-    if (!tree.verify())
-      cout << "Error: " << i << endl;
   }
+  if (!tree.verify())
+    cout << "Error mixed insertion removal." << endl;
 }
 
 int main() {

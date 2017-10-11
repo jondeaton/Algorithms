@@ -229,8 +229,7 @@ Node<T> RedBlackTree<T>::remove(Node<T> node, const T& value) {
  * ---------------------------------
  * Fixes a node that has been colored double black during a deletion
  * @tparam T: Type of element stored in the node
- * @param node: The double black node to fix
- * @param parent: The parent of the double black node
+ * @param node: The parent of the doube black node
  * @param side: The side of the parent that the double black node IS on
  * @return: New parent after fixing the double black node (may itself have turned double black!)
  */
@@ -241,8 +240,15 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
   // Red sibiling
   if (sibiling->color == red) {
     setColor(sibiling, black);
-    setColor(childOf(sibiling, side), red);
-    return rotate(node, side);
+    setColor(node, red);
+
+    auto root = rotate(node, side);
+    if (side == left)
+      root->left = fixDoubleBlack(root->left, side);
+    else
+      root->right = fixDoubleBlack(root->right, side);
+    updateHeight(root);
+    return root;
   }
 
   // Black sibiling
@@ -272,7 +278,7 @@ Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1)
 
   if (side0 == left) {
     if (side1 == left) { // Left Left
-      setColor(node->left->right, black);
+      setColor(node->left->left, black);
       return rotate(node, right);
 
     } else { // Left right
@@ -289,19 +295,14 @@ Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1)
     if (side1 == left) { // Right left
       setColor(node->right, red);
       setColor(node->right->left, black);
-      // node->right->setColor(red);
-//      if (node->right->left != nullptr)
-//        node->right->left->setColor(black);
       node->right = rotate(node->right, right); // <-- rotate sub-tree
       updateHeight(node->right);
 
       setColor(node->right->right, black);
-//      node->right->right->setColor(black);
       return rotate(node, left);
 
     } else { // Right right
       setColor(node->right->right, black);
-      //node->right->right->setColor(black);
       return rotate(node, left);
     }
   }
