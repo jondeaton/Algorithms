@@ -21,13 +21,13 @@ RedBlackTree<T>::RedBlackTree() { }
 template <class T>
 void RedBlackTree<T>::insert(const T& element) {
   root = insertAtBlack(root, element);
-  if (root != nullptr) root->setColor(black);
+  setColor(root, black);
 }
 
 template <class T>
 void RedBlackTree<T>::remove(const T& element) {
   root = remove(root, element);
-  if (root != nullptr) root->setColor(black);
+  setColor(root, black);
 }
 
 template <class T>
@@ -113,7 +113,6 @@ Node<T> RedBlackTree<T>::insertAtRed(Node<T> node, Node<T> parent, Side side, co
         return balance(parent, side, right); // Black uncle: rotations
     }
   }
-
   updateHeight(parent);
   return parent;
 }
@@ -130,9 +129,11 @@ template <class T>
 void RedBlackTree<T>::recolor(Node<T> node) {
   if (node == nullptr) return;
 
-  if (node->left  != nullptr) node->left->setColor(black);
-  if (node->right != nullptr) node->right->setColor(black);
-  node->setColor(red);
+  if (node->left  != nullptr)
+    setColor(node->left, black);
+  if (node->right != nullptr)
+    setColor(node->right, black);
+  setColor(node, red);
 }
 
 /**
@@ -152,8 +153,8 @@ Node<T> RedBlackTree<T>::balance(Node<T> node, Side side0, Side side1) {
       node->left = rotate(node->left, left);
       updateHeight(node->left);
     }
-    node->setColor(red);
-    node->left->setColor(black);
+    setColor(node, red);
+    setColor(node->left, black);
     return rotate(node, right);
 
   } else {
@@ -161,8 +162,8 @@ Node<T> RedBlackTree<T>::balance(Node<T> node, Side side0, Side side1) {
       node->right = rotate(node->right, right);
       updateHeight(node->right);
     }
-    node->setColor(red);
-    node->right->setColor(black);
+    setColor(node, red);
+    setColor(node->right, black);
     return rotate(node, left);
   }
 }
@@ -239,8 +240,8 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
 
   // Red sibiling
   if (sibiling->color == red) {
-    sibiling->setColor(black);
-    childOf(sibiling, side)->setColor(red);
+    setColor(sibiling, black);
+    setColor(childOf(sibiling, side), red);
     return rotate(node, side);
   }
 
@@ -249,9 +250,9 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
   if (redChildSide != none) {
     return rotateDoubleBlack(node, otherSide(side), redChildSide);
   } else {
-    sibiling->setColor(red);
+    setColor(sibiling, red);
     updateHeight(node);
-    node->setColor(black); // <-- just turned double black
+    setColor(node, black); // <-- just turned double black
     return node;
   }
 }
@@ -271,31 +272,36 @@ Node<T> RedBlackTree<T>::rotateDoubleBlack(Node<T> node, Side side0, Side side1)
 
   if (side0 == left) {
     if (side1 == left) { // Left Left
-      node->left->right->setColor(black);
+      setColor(node->left->right, black);
       return rotate(node, right);
 
     } else { // Left right
-      node->left->setColor(red);
-      node->left->right->setColor(black);
+      setColor(node->left, red);
+      setColor(node->left->right, black);
       node->left = rotate(node->left, left); // <-- rotate sub-tree
       updateHeight(node->left);
 
-      node->left->left->setColor(black);
-      return rotate(node, left);
+      setColor(node->left->left, black);
+      return rotate(node, right);
     }
 
   } else {
     if (side1 == left) { // Right left
-      node->right->setColor(red);
-      node->right->left->setColor(black);
+      setColor(node->right, red);
+      setColor(node->right->left, black);
+      // node->right->setColor(red);
+//      if (node->right->left != nullptr)
+//        node->right->left->setColor(black);
       node->right = rotate(node->right, right); // <-- rotate sub-tree
       updateHeight(node->right);
 
-      node->right->right->setColor(black);
+      setColor(node->right->right, black);
+//      node->right->right->setColor(black);
       return rotate(node, left);
 
     } else { // Right right
-      node->right->right->setColor(black);
+      setColor(node->right->right, black);
+      //node->right->right->setColor(black);
       return rotate(node, left);
     }
   }
@@ -406,6 +412,23 @@ Node<T> RedBlackTree<T>::next(const Node<T> node) {
 }
 
 /**
+ * Private Method: setColor
+ * ------------------------
+ * Sets the color of a node while updating it's height accordingly
+ * @tparam T: The type of element stored in the node
+ * @param node: The node to set the color of
+ * @param color: The color to set the node to
+ */
+template <class T>
+void RedBlackTree<T>::setColor(Node<T> node, Color color) {
+  if (node == nullptr) return; // nothing to do
+  if (node->color == color) return; // nothing to do
+  if (color == red) node->height--; // demotion
+  else node->height++; // promotion
+  node->color = color;
+}
+
+/**
  * Private Method: updateHeight
  * ----------------------------
  * Updates the height of a node to be the one plus the maximum of the heights of it's two children. Nodes with
@@ -488,6 +511,7 @@ Side RedBlackTree<T>::redChild(const Node<T> node) {
  *  - If it is red, then it does not have a red child (red violation)
  *  - The black heights of its two children are equal (black height violation)
  *  - Both child nodes are properly formed
+ *  Time complexity: O(n) (!!!)
  * @param node: The node to check for corruption
  * @return: True if the node (and all of it's children) are well formed, false otherwise
  */
@@ -495,14 +519,14 @@ template <class T>
 bool RedBlackTree<T>::verify(const Node<T> node) {
   if (node == nullptr) return true;
 
-  // Check for correct value placements
+  // Correct value placements
   if (node->left != nullptr && node->left->value >= node->value)
     return false;
 
   if (node->right != nullptr && node->right->value <= node->value)
     return false;
 
-  // Check for red violation
+  // Red violation
   if (node->color == red) {
     if (node->left != nullptr && node->left->color == red)
       return false;
@@ -510,17 +534,17 @@ bool RedBlackTree<T>::verify(const Node<T> node) {
       return false;
   }
 
-  // Check for incorrect heights
+  // Incorrect height
   size_t expectedHeight = getHeight(node);
   if (node->height != expectedHeight){
     return false;
   }
 
-  // Check for height violation
+  // Black height violation
   size_t leftHeight =  getHeight(node->left);
   size_t rightHeight = getHeight(node->right);
   if (leftHeight != rightHeight)
     return false;
 
-  return verify(node->left) && verify(node->right);
+  return verify(node->left) && verify(node->right); // check every sub-tree
 }
