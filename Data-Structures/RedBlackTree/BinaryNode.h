@@ -31,12 +31,28 @@ public:
   std::shared_ptr<BinaryNode<T>> right;
 
   explicit BinaryNode(const T& value, Color color=red);
+
+  /**
+   * Public method: setColor
+   * -----------------------
+   * Sets the color of the node while updating it's height
+   * @param newColor: The new color to set the node
+   */
+  void setColor(Color newColor);
 };
 
 template <class T>
-BinaryNode<T>::BinaryNode(const T& value, Color color) : value(value), color(color),
+BinaryNode<T>::BinaryNode(const T& value, Color color) : value(value), height(1), color(red),
                                                          left(nullptr), right(nullptr) {
-  height = color == black ? 2 : 1;
+  setColor(color);
+}
+
+template <class T>
+void BinaryNode<T>::setColor(Color newColor) {
+  if (color == newColor) return; // nothing to do
+  if (newColor == red) height--; // demotion
+  else height++; // promotion
+  color = newColor;
 }
 
 #endif
