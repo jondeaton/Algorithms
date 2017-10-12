@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 '''
 Bottom up heapify
 Time complecity: O(n) 
@@ -17,7 +17,7 @@ def _heapify(A, i):
 	r = rightOf(A, i)
 
 	largest = l if l is not None and A[l] > A[i] else i
-	largest = r if r is not None and A[r] < A[largest] else largest
+	largest = r if r is not None and A[r] > A[largest] else largest
 
 	if largest != i:
 		swap(A, i, largest)
