@@ -1,12 +1,12 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 '''
 Bottom up heapify
 Time complecity: O(n) 
 Space complexity:  O(1)
 
 https://courses.csail.mit.edu/6.006/fall10/handouts/recitation10-8.pdf
-'''
 
+'''
 def heapify(A):
 	N = len(A)
 	for i in xrange(N / 2, -1, -1):
@@ -17,7 +17,7 @@ def _heapify(A, i):
 	r = rightOf(A, i)
 
 	largest = l if l is not None and A[l] > A[i] else i
-	largest = r if r is not None adn A[r] < A[largest] else largest
+	largest = r if r is not None and A[r] < A[largest] else largest
 
 	if largest != i:
 		swap(A, i, largest)
