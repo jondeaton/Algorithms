@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ghost/Repos/Algorithms/Data-Structures/AVL-Tree/AVL-Tree.h
+BinaryNode.h
+/home/ghost/Repos/Algorithms/Data-Structures/AVL-Tree/BinaryNode.h
+memory
+-
+AVL-Tree.tpp
+/home/ghost/Repos/Algorithms/Data-Structures/AVL-Tree/AVL-Tree.tpp
+
+/home/ghost/Repos/Algorithms/Data-Structures/AVL-Tree/AVL-Tree.tpp
+BinaryNode.h
+/home/ghost/Repos/Algorithms/Data-Structures/AVL-Tree/BinaryNode.h
+memory
+-
+
+/home/ghost/Repos/Algorithms/Data-Structures/AVL-Tree/BinaryNode.h
+memory
+-
+
+/home/ghost/Repos/Algorithms/Data-Structures/AVL-Tree/test-AVL.cpp
+AVL-Tree.h
+/home/ghost/Repos/Algorithms/Data-Structures/AVL-Tree/AVL-Tree.h
+random
+-
+stdio.h
+-
+iostream
+-
+

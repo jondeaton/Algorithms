@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/BinaryNode.h
+memory
+-
+
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/RedBlackTree.h
+BinaryNode.h
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/BinaryNode.h
+memory
+-
+RedBlackTree.tpp
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/RedBlackTree.tpp
+
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/RedBlackTree.tpp
+BinaryNode.h
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/BinaryNode.h
+RedBlackTree.h
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/RedBlackTree.h
+memory
+-
+
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/test-RedBlackTree.cpp
+RedBlackTree.h
+/home/ghost/Repos/Algorithms/Data-Structures/RedBlackTree/RedBlackTree.h
+random
+-
+iostream
+-
+
