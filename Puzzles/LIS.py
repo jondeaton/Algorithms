@@ -8,7 +8,7 @@ def LIS(arr):
 	answers = [1 for _ in xrange(N)]
 
 	for r in xrange(N):
-		longest = 0
+		longest = 1
 		for i in xrange(r):
 			if arr[r] > arr[i] and answers[i] + 1 > longest:
 				longest = answers[i] + 1
@@ -20,21 +20,20 @@ def LIS(arr):
 # strictly increasing subsequence with greatest sum
 def MIS(arr):
 	N = len(arr)
-	sums = [0 for _ in xrange(N)]
+	sums = [x for x in arr]
 
 	for r in xrange(N):
-		greatest = 0
+		greatest = arr[0]
 		for i in xrange(r):
 			if arr[r] > arr[i]:
 				greatest = max(greatest, arr[r] + sums[i])
-
+		sums[r] = greatest
 	return max(sums)
 
-
-
 def main():
-	l = [1, 2, 3, 4, 5]
-	print LIS(arr)
+	l = [1, 2, 3, 4, 5, 0, 3, 4, 10, 11, 5, 12, 0, 200]
+	print LIS(l)
+	print MIS(l)
 
 
 
