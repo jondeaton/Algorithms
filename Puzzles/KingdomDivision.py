@@ -24,6 +24,54 @@ def computeAnswer(adj, answers, completed, n):
 
     return red, blue, d_red, d_blue
 
+
+def finalSolution(adj):
+    N = len(adj)
+    visited = [False for _ in xrange(N)]
+    completed = [False for _ in xrange(N)]
+    answers = {}
+
+    queue = [0]
+    while queue:
+        n = queue[-1]
+
+        # Base case
+        if not visited[n]:
+            answers[n] = 1, 1, 1, 1 # initial partial answer
+        visited[n] = True
+
+        red, blue, d_red, d_blue = answers[n] # retrieve old partial answers
+
+        all_completed = True
+        for c in adj[n]:
+            
+            if completed[c]:
+                c_red, c_blue, c_d_red, c_d_blue = answers[c]
+                red *= (c_red + c_blue + c_d_red) % (10**9 + 7)
+                blue *= (c_red + c_blue + c_d_blue) % (10**9 + 7)
+                d_red *= c_blue % (10**9 + 7)
+                d_blue *= c_red % (10**9 + 7)
+            else:
+                if visited[c]: continue # don't requeue parent
+                all_completed = False
+                queue.append(c)
+
+        # All children have been completed
+        if all_completed:
+            red -= d_red
+            blue -= d_blue
+            completed[n] = True # we are complete
+            queue.pop() # dequeue now that finished
+
+        # Update the partial answer after considering all completed child nodes
+        answers[n] = red % (10**9 + 7), blue % (10**9 + 7), d_red % (10**9 + 7), d_blue % (10**9 + 7)
+
+        # print "Queue: %s" % queue
+        # print "Answers: %s" % answers
+
+    return answers[0][0] + answers[0][1]
+
+
 """
 Dynamic programing without recursion
 """
@@ -56,10 +104,6 @@ def solution(adj):
             for c in adj[n]:
                 if not visited[c] and not completed[c]:
                     queue.append(c)
-
-        # print "Queue: %s" % queue
-        # print "Answers: %s" % answers
-
     return answers[0][0] + answers[0][1]
 
 
@@ -129,7 +173,8 @@ def main():
 
     # s = Solution(adj)
     # print s.solution() % (10**9 + 7)
-    print solution(adj) % (10**9 + 7)
+    # print solution(adj) % (10**9 + 7)
+    print finalSolution(adj) % (10**9 + 7)
 
 
 main()
