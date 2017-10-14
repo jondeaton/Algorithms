@@ -1,4 +1,7 @@
-
+#!/usr/bin/env python
+'''
+Write a method to determine if a linked list is a palindrome
+'''
 
 def isPalindrome(ll):
 	return isPali(ll, ll)[0]
