@@ -1,11 +1,14 @@
 
+#ifndef _PATH_HPP_INCLUDED
+#define _PATH_HPP_INCLUDED
+
 #include <vector>
 #include <iostream>
 
 template <class T>
 class Path {
 public:
-  std::vector<int> nodes;
+  std::vector<T> nodes;
 private:
   template <class U>
   friend std::ostream& operator<<(std::ostream& os, const Path<U>& path);
@@ -25,3 +28,5 @@ std::istream& operator>>(std::istream& is, Path<T>& path) {
   for (int node : path.nodes) is >> node;
   return is;
 }
+
+#endif // _PATH_HPP_INCLUDED

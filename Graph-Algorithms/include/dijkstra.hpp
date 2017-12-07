@@ -17,10 +17,10 @@
 #include <limits>
 #include <vector>
 
-class CompareDistances {
+struct CompareDistances {
 public:
   explicit CompareDistances(const int* dists) : dists(dists) {}
-  bool operator()(int a, int b) {
+  bool operator()(size_t a, size_t b) {
     return dists[a] < dists[b];
   }
 private:
@@ -33,19 +33,22 @@ class Dijkstra {
 public:
 
   Dijkstra() : size(0) {
-    prevs = (int*) malloc(size);
+    prevs = (size_t*) malloc(size);
     dists = (int*) malloc(size);
   }
 
-  Path<T> run(Graph<T> graph, int source, int sink) {
+  Path<size_t> run(Graph<T> graph, size_t source, size_t sink) {
+
     setup_arrays(graph.size());
     dists[source] = 0;
 
-    std::priority_queue<int, std::vector<int>, CompareDistances> queue(CompareDistances(dists));
-    for (int i = 0; i < graph.size(); i++) queue.push(i);
+    CompareDistances cmp(dists);
+    std::priority_queue<size_t, std::vector<size_t>, CompareDistances> queue(cmp);
+    for (size_t i = 0; i < graph.size(); i++) queue.push(i);
 
     while (!queue.empty()) {
-      int v = queue.top();
+      size_t v = queue.top();
+      if (v == sink) return make_path(source, sink);
       queue.pop();
       for (Edge edge : graph[v]) {
         int alt = dists[edge.to] + edge.weight;
@@ -55,12 +58,13 @@ public:
         }
       }
     }
-    return make_path(source, sink);
+    Path<size_t> path;
+    return path;
   }
 
-  Path<T> make_path(int start, int end) {
-    Path<int> path;
-    for (int v = end; v != start; v = prevs[v]) path.nodes.push_back(v);
+  Path<size_t> make_path(size_t start, size_t end) {
+    Path<size_t> path;
+    for (size_t v = end; v != start; v = prevs[v]) path.nodes.push_back(v);
     std::reverse(path.nodes.begin(), path.nodes.end());
     return path;
   }
@@ -72,13 +76,13 @@ public:
 
 private:
   size_t size;
-  int* prevs;
+  size_t* prevs;
   int* dists;
 
   void setup_arrays(size_t new_size) {
     if (new_size <= size) return;
     size = new_size;
-    prevs = (int*) realloc(prevs, size);
+    prevs = (size_t*) realloc(prevs, size);
     dists = (int*) realloc(dists, size);
     memset(dists, std::numeric_limits<int>::max(), size);
     memset(prevs, -1, size);

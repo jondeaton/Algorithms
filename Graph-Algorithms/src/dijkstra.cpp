@@ -13,9 +13,8 @@ using namespace std;
 
 // Static function declaration
 template <class T>
-void make_graph(Graph<T> &graph);
+static void make_graph(Graph<T> &graph);
 static int get_next_int();
-template <class T>
 
 int main() {
   int num_nodes = get_next_int(); // Number of nodes
@@ -26,13 +25,13 @@ int main() {
   cin >> start;
   cin >> end;
 
-  Dijkstra d;
-  Path<int> path = d.run(graph, start, end);
+  Dijkstra<int> d;
+  auto path = d.run(graph, start, end);
   cout << path << endl;
 }
 
 template <class T>
-void make_graph(Graph<T> &graph) {
+static void make_graph(Graph<T> &graph) {
   int num_edges = get_next_int();
 
   int from, to, weight;

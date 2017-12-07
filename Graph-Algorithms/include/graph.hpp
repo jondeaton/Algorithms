@@ -23,13 +23,14 @@ public:
   Node<T>& operator[](int i);
 
   Node<T>* store;
+  std::size_t it_size;
   typedef Node<T>* iterator;
   typedef const Node<T>* const_iterator;
 
   iterator begin() { return &store[0]; }
   const_iterator begin() const { return &store[0]; }
-  iterator end() { return &store[size]; }
-  const_iterator end() const { return &store[size]; }
+  iterator end() { return &store[it_size]; }
+  const_iterator end() const { return &store[it_size]; }
 
 private:
   std::vector<Node<T>> nodes;

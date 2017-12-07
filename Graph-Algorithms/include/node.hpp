@@ -26,15 +26,15 @@ public:
   size_t num_edges() { return connections.size(); }
   Edge& operator[](int i);
 
-  Edge* store;
-  std::size_t size = 0;
+  Edge* store = nullptr;
+  std::size_t it_size;
   typedef Edge* iterator;
   typedef const Edge* const_iterator;
 
   iterator begin() { return &store[0]; }
   const_iterator begin() const { return &store[0]; }
-  iterator end() { return &store[size]; }
-  const_iterator end() const { return &store[size]; }
+  iterator end() { return &store[it_size]; }
+  const_iterator end() const { return &store[it_size]; }
 
 private:
   std::vector<Edge> connections;
