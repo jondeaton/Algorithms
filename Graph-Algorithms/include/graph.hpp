@@ -7,41 +7,33 @@
 #ifndef _GRAPH_HPP_INCLUDED
 #define _GRAPH_HPP_INCLUDED
 
+#include <node.hpp>
 #include <vector>
-#include <memory>
 
 template <class T>
 class Graph {
 public:
-    Graph(int N);
-    void add_node();
+  Graph() = default;
+  explicit Graph(int N);
+
+  void add_node();
+  void add_node(T data);
+  void add_node(Node<T>& node);
+  Node<T>& operator[](int i);
+
+  Node<T>* store;
+  std::size_t size = 0;
+  typedef Node<T>* iterator;
+  typedef const Node<T>* const_iterator;
+
+  iterator begin() { return &store[0]; }
+  const_iterator begin() const { return &store[0]; }
+  iterator end() { return &store[size]; }
+  const_iterator end() const { return &store[size]; }
+
 private:
-    std::vector<std::shared_ptr<Node<T>>> nodes;
+  std::vector<Node<T>> nodes;
 };
 
-template <class T>
-class Node {
-public:
-    T data;
-    std::vector<Vertex> connections;
-};
-
-class Vertex {
-public:
-    int weight;
-    int to;
-    Vertex(int weight, int from, int to) : weight(weight), from(from), to(to) {}
-};
-
-template <class T>
-Graph::Graph(int N) {
-    for (int i = 0; i < N; i++) add_node();
-}
-
-template <class T>
-void Graph::add_node() {
-    std::shared_ptr<Node<T>> node = make_shared();
-    nodes.push_back(node);
-}
-
-#endif _GRAPH_HPP_INCLUDED
+#include <graph.tpp>
+#endif // _GRAPH_HPP_INCLUDED

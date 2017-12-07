@@ -8,6 +8,8 @@ any node being connected to only nodes of a different color
 
 import sys
 
+E = 10**9 + 7
+
 def computeAnswer(adj, answers, completed, n):
     # compute the answer    
     red, blue, d_red, d_blue = 1, 1, 1, 1       
@@ -35,7 +37,7 @@ def finalSolution(adj):
     while queue:
         n = queue[-1]
 
-        # Base case
+        # Base cases
         if not visited[n]:
             answers[n] = 1, 1, 1, 1 # initial partial answer
         visited[n] = True
@@ -47,10 +49,10 @@ def finalSolution(adj):
             
             if completed[c]:
                 c_red, c_blue, c_d_red, c_d_blue = answers[c]
-                red *= (c_red + c_blue + c_d_red) % (10**9 + 7)
-                blue *= (c_red + c_blue + c_d_blue) % (10**9 + 7)
-                d_red *= c_blue % (10**9 + 7)
-                d_blue *= c_red % (10**9 + 7)
+                red *= (c_red + c_blue + c_d_red) % E
+                blue *= (c_red + c_blue + c_d_blue) % E
+                d_red *= c_blue % E
+                d_blue *= c_red % E
             else:
                 if visited[c]: continue # don't requeue parent
                 all_completed = False
@@ -64,7 +66,7 @@ def finalSolution(adj):
             queue.pop() # dequeue now that finished
 
         # Update the partial answer after considering all completed child nodes
-        answers[n] = red % (10**9 + 7), blue % (10**9 + 7), d_red % (10**9 + 7), d_blue % (10**9 + 7)
+        answers[n] = red % E, blue % E, d_red % E, d_blue % E
 
         # print "Queue: %s" % queue
         # print "Answers: %s" % answers
@@ -172,9 +174,9 @@ def main():
     adj = getAdj(N, data)
 
     # s = Solution(adj)
-    # print s.solution() % (10**9 + 7)
-    # print solution(adj) % (10**9 + 7)
-    print finalSolution(adj) % (10**9 + 7)
+    # print s.solution() % E
+    # print solution(adj) % E
+    print finalSolution(adj) % E
 
 
 main()

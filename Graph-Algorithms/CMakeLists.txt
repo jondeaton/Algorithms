@@ -8,8 +8,12 @@ else()
     SET(CMAKE_CXX_FLAGS "-g -O0 -Wall -Wextra -pedantic")
 endif()
 
+include_directories(include src)
+
 set(SRC
-        dijkstra.cpp
-        graph.hpp       graph.cpp)
+        include/graph.hpp           src/graph.tpp
+        include/node.hpp            src/node.tpp
+        include/vertex.hpp          src/vertex.tpp
+        src/dijkstra.cpp)
 
 add_executable(dijkstra ${SRC})
