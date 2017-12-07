@@ -11,42 +11,42 @@ using namespace std;
 // Static function declaration
 static int get_next_int();
 
-template <class T>
-class Path {
-public:
-  std::vector<int> nodes;
-private:
-  friend std::ostream& operator<<(std::ostream& os, const Path<T>& path);
-  friend std::istream& operator>>(std::istream& is, Path<T>& path);
-};
-
-template <class T>
-std::ostream& operator<<(std::ostream &os, const Path<T>& path) {
-  for (int node : path.nodes) os << node << ", ";
-  return os;
-}
-
-template <class T>
-std::istream& operator>>(std::istream& is, Path<T>& path) {
-  for (int node : path.nodes) is >> node;
-  return is;
-}
-
-template <class T>
-void make_graph(Graph<T> &graph) {
-  (void) graph;
-}
-
-template <class T>
-Path<T> dijkstra(Graph<T> graph, int source, int sink) {
-  (void) source;
-  (void) sink;
-
-  for (const Node<T> & node : graph) cout << "Node: " << node << endl;
-
-  Path<T> path;
-  return path;
-}
+//template <class T>
+//class Path {
+//public:
+//  std::vector<int> nodes;
+//private:
+//  friend std::ostream& operator<<(std::ostream& os, const Path& path);
+//  friend std::istream& operator>>(std::istream& is, Path& path);
+//};
+//
+//template <class T>
+//std::ostream& operator<<(std::ostream &os, const Path<T>& path) {
+//  for (int node : path.nodes) os << node << ", ";
+//  return os;
+//}
+//
+//template <class T>
+//std::istream& operator>>(std::istream& is, Path<T>& path) {
+//  for (int node : path.nodes) is >> node;
+//  return is;
+//}
+//
+//template <class T>
+//void make_graph(Graph<T> &graph) {
+//  (void) graph;
+//}
+//
+//template <class T>
+//Path<T> dijkstra(Graph<T> graph, int source, int sink) {
+//  (void) source;
+//  (void) sink;
+//
+//  for (const Node<T> & node : graph) cout << "Node: " << node << endl;
+//
+//  Path<T> path;
+//  return path;
+//}
 
 int main() {
   int N = get_next_int();
@@ -54,10 +54,11 @@ int main() {
   int end  = get_next_int();
 
   Graph<int> graph(N);
-  make_graph(graph);
+  cout << graph[0] << endl;
+//  make_graph(graph);
 
-  Path<int> path = dijkstra(graph, start, end);
-  cout << path << endl;
+  // Path<int> path = dijkstra(graph, start, end);
+//  cout << path << endl;
 }
 
 static int get_next_int() {
