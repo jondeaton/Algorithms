@@ -19,7 +19,7 @@ private:
 
 template <class T>
 std::ostream& operator<<(std::ostream &os, const Path<T>& path) {
-  for (int node : path.nodes) os << node << ", ";
+  for (T node : path.nodes) os << node << " ";
   return os;
 }
 

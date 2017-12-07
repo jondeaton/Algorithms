@@ -17,17 +17,20 @@
 #include <limits>
 #include <vector>
 
+template <class T>
+static inline void set_all(T* arr, T val, size_t count);
+
 struct CompareDistances {
 public:
   explicit CompareDistances(const int* dists) : dists(dists) {}
   bool operator()(size_t a, size_t b) {
-    return dists[a] < dists[b];
+    return dists[a] > dists[b];
   }
 private:
   const int* dists;
 };
 
-template <class T>
+template <class T, class WT>
 class Dijkstra {
 
 public:
@@ -37,24 +40,25 @@ public:
     dists = (int*) malloc(size);
   }
 
-  Path<size_t> run(Graph<T> graph, size_t source, size_t sink) {
+  Path<size_t> run(Graph<T, WT> graph, size_t source, size_t sink) {
 
     setup_arrays(graph.size());
     dists[source] = 0;
 
     CompareDistances cmp(dists);
     std::priority_queue<size_t, std::vector<size_t>, CompareDistances> queue(cmp);
-    for (size_t i = 0; i < graph.size(); i++) queue.push(i);
+    queue.push(source);
 
     while (!queue.empty()) {
       size_t v = queue.top();
       if (v == sink) return make_path(source, sink);
       queue.pop();
-      for (Edge edge : graph[v]) {
-        int alt = dists[edge.to] + edge.weight;
+      for (Edge<WT> edge : graph[v]) {
+        int alt = dists[v] + edge.weight;
         if (alt < dists[edge.to]) {
           dists[edge.to] = alt;
           prevs[edge.to] = v;
+          queue.push(edge.to);
         }
       }
     }
@@ -84,9 +88,13 @@ private:
     size = new_size;
     prevs = (size_t*) realloc(prevs, size);
     dists = (int*) realloc(dists, size);
-    memset(dists, std::numeric_limits<int>::max(), size);
-    memset(prevs, -1, size);
+    set_all(dists, std::numeric_limits<int>::max(), size);
   }
 };
+
+template <class T>
+static inline void set_all(T* arr, T val, size_t count) {
+  for (size_t i = 0; i < count; i++) arr[i] = val;
+}
 
 #endif // _DIJKSTRA_HPP_INCLUDED

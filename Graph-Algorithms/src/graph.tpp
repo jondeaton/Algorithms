@@ -6,29 +6,29 @@
 
 #include <graph.hpp>
 
-template <class T>
-Graph<T>::Graph(int N) {
-  for (int i = 0; i < N; i++) add_node();
+template <class T, class WT>
+Graph<T, WT>::Graph(size_t N) {
+  for (size_t i = 0; i < N; i++) add_node();
 }
 
-template <class T>
-void Graph<T>::add_node() {
-  Node<T> node;
+template <class T, class WT>
+void Graph<T, WT>::add_node() {
+  Node<T, WT> node;
   add_node(node);
 }
 
-template <class T>
-void Graph<T>::add_node(T data) {
-  Node<T> node(data);
+template <class T, class WT>
+void Graph<T, WT>::add_node(T data) {
+  Node<T, WT> node(data);
   add_node(node);
 }
 
-template <class T>
-void Graph<T>::add_node(Node<T> &node) {
+template <class T, class WT>
+void Graph<T, WT>::add_node(Node<T, WT> &node) {
   nodes.push_back(node);
 }
 
-template <class T>
-Node<T>& Graph<T>::operator[](int i) {
+template <class T, class WT>
+Node<T, WT>& Graph<T, WT>::operator[](int i) {
   return nodes[i];
 }

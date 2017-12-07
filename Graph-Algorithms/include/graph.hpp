@@ -10,30 +10,28 @@
 #include <node.hpp>
 #include <vector>
 
-template <class T>
+template <class T, class WT>
 class Graph {
 public:
   Graph() = default;
-  explicit Graph(int N);
+  explicit Graph(size_t N);
 
   size_t size() { return nodes.size(); }
   void add_node();
   void add_node(T data);
-  void add_node(Node<T>& node);
-  Node<T>& operator[](int i);
+  void add_node(Node<T, WT>& node);
+  Node<T, WT>& operator[](int i);
 
-  Node<T>* store;
-  std::size_t it_size;
-  typedef Node<T>* iterator;
-  typedef const Node<T>* const_iterator;
+  typedef typename std::vector<Node<T, WT>>::iterator iterator;
+  typedef typename std::vector<Node<T, WT>>::const_iterator const_iterator;
 
-  iterator begin() { return &store[0]; }
-  const_iterator begin() const { return &store[0]; }
-  iterator end() { return &store[it_size]; }
-  const_iterator end() const { return &store[it_size]; }
+  iterator begin() { return nodes.begin(); }
+  const_iterator begin() const { return nodes.begin(); }
+  iterator end() { return nodes.end(); }
+  const_iterator end() const { return nodes.end(); }
 
 private:
-  std::vector<Node<T>> nodes;
+  std::vector<Node<T, WT>> nodes;
 };
 
 #include <graph.tpp>

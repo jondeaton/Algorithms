@@ -7,45 +7,44 @@
 #include "graph.hpp"
 #include "path.hpp"
 #include "dijkstra.hpp"
-
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 // Static function declaration
-template <class T>
-static void make_graph(Graph<T> &graph);
-static int get_next_int();
+template <class T, class WT>
+static void make_graph(Graph<T, WT> &graph);
 
 int main() {
-  int num_nodes = get_next_int(); // Number of nodes
-  Graph<int> graph(num_nodes);
+  ifstream in("/Users/jonpdeaton/GitHub/Algorithms/Graph-Algorithms/test");
+  cin.rdbuf(in.rdbuf());
+
+  size_t num_nodes;
+  cin >> num_nodes;
+  Graph<int, int> graph(num_nodes);
   make_graph(graph);
 
-  int start, end;
+  size_t start, end;
   cin >> start;
   cin >> end;
 
-  Dijkstra<int> d;
+  Dijkstra<int, int> d;
   auto path = d.run(graph, start, end);
   cout << path << endl;
 }
 
-template <class T>
-static void make_graph(Graph<T> &graph) {
-  int num_edges = get_next_int();
+template <class T, class WT>
+static void make_graph(Graph<T, WT> &graph) {
+  size_t num_edges;
+  cin >> num_edges;
 
-  int from, to, weight;
-  for (int i = 0; i < num_edges; i++) {
+  size_t from, to;
+  WT weight;
+
+  for (size_t i = 0; i < num_edges; i++) {
     cin >> from;
     cin >> to;
     cin >> weight;
     graph[from].add_edge(weight, to);
   }
-}
-
-static int get_next_int() {
-  char* line = nullptr;
-  size_t size;
-  getline(&line, &size, stdin);
-  return (int) strtol(line, NULL, 0);
 }

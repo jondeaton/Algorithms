@@ -11,7 +11,7 @@
 #include <vector>
 #include <iostream>
 
-template <class T>
+template <class T, class WT>
 class Node {
 public:
   Node() = default;
@@ -20,37 +20,36 @@ public:
   T data;
 
   void add_edge();
-  void add_edge(const Edge &edge);
-  void add_edge(int weight, int to);
+  void add_edge(const Edge<WT> &edge);
+  void add_edge(int weight, size_t to);
   void remove_edge(int i);
-  size_t num_edges() { return connections.size(); }
-  Edge& operator[](int i);
+  size_t num_edges() { return edges.size(); }
+  Edge<WT>& operator[](int i);
 
-  Edge* store = nullptr;
-  std::size_t it_size;
-  typedef Edge* iterator;
-  typedef const Edge* const_iterator;
+  typedef typename std::vector<Edge<WT>>::iterator iterator;
+  typedef typename std::vector<Edge<WT>>::const_iterator const_iterator;
 
-  iterator begin() { return &store[0]; }
-  const_iterator begin() const { return &store[0]; }
-  iterator end() { return &store[it_size]; }
-  const_iterator end() const { return &store[it_size]; }
+  iterator begin() { return edges.begin(); }
+  const_iterator begin() const { return edges.begin(); }
+  iterator end() { return edges.end(); }
+  const_iterator end() const { return edges.end(); }
 
 private:
-  std::vector<Edge> connections;
-  template <class U>
-  friend std::ostream& operator<<(std::ostream &os, const Node<U> &node);
-  template <class U>
-  friend std::istream& operator>>(std::istream &is, Node<U> &node);
+  std::vector<Edge<WT>> edges;
+
+  template <class U, class WU>
+  friend std::ostream& operator<<(std::ostream &os, const Node<U, WU> &node);
+  template <class U, class WU>
+  friend std::istream& operator>>(std::istream &is, Node<U, WU> &node);
 };
 
-template <class T>
-inline std::ostream& operator<<(std::ostream &os, const Node<T> &node) {
+template <class T, class WT>
+inline std::ostream& operator<<(std::ostream &os, const Node<T, WT> &node) {
   return os << node.data;
 }
 
-template <class T>
-inline std::istream& operator>>(std::istream &is, Node<T> &node) {
+template <class T, class WT>
+inline std::istream& operator>>(std::istream &is, Node<T, WT> &node) {
   return node.data >> is;
 }
 
