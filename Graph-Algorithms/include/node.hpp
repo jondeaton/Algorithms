@@ -7,7 +7,7 @@
 #ifndef _NODE_HPP_INCLUDED
 #define _NODE_HPP_INCLUDED
 
-#include <vertex.hpp>
+#include <edge.hpp>
 #include <vector>
 #include <iostream>
 
@@ -19,15 +19,29 @@ public:
 
   T data;
 
-  void add_vertex();
-  void add_vertex(const Vertex& vertex);
-  void add_vertex(int weight, int to);
-  void remove_vertex(int i);
-  Vertex& operator[](int i);
+  void add_edge();
+  void add_edge(const Edge &edge);
+  void add_edge(int weight, int to);
+  void remove_edge(int i);
+  size_t num_edges() { return connections.size(); }
+  Edge& operator[](int i);
+
+  Edge* store;
+  std::size_t size = 0;
+  typedef Edge* iterator;
+  typedef const Edge* const_iterator;
+
+  iterator begin() { return &store[0]; }
+  const_iterator begin() const { return &store[0]; }
+  iterator end() { return &store[size]; }
+  const_iterator end() const { return &store[size]; }
+
 private:
-  std::vector<Vertex> connections;
-  friend std::ostream& operator<<(std::ostream &os, const Node &node);
-  friend std::istream& operator>>(std::istream &is, Node &node);
+  std::vector<Edge> connections;
+  template <class U>
+  friend std::ostream& operator<<(std::ostream &os, const Node<U> &node);
+  template <class U>
+  friend std::istream& operator>>(std::istream &is, Node<U> &node);
 };
 
 template <class T>

@@ -5,60 +5,43 @@
  */
 
 #include "graph.hpp"
+#include "path.hpp"
+#include "dijkstra.hpp"
+
 #include <iostream>
 using namespace std;
 
 // Static function declaration
+template <class T>
+void make_graph(Graph<T> &graph);
 static int get_next_int();
-
-//template <class T>
-//class Path {
-//public:
-//  std::vector<int> nodes;
-//private:
-//  friend std::ostream& operator<<(std::ostream& os, const Path& path);
-//  friend std::istream& operator>>(std::istream& is, Path& path);
-//};
-//
-//template <class T>
-//std::ostream& operator<<(std::ostream &os, const Path<T>& path) {
-//  for (int node : path.nodes) os << node << ", ";
-//  return os;
-//}
-//
-//template <class T>
-//std::istream& operator>>(std::istream& is, Path<T>& path) {
-//  for (int node : path.nodes) is >> node;
-//  return is;
-//}
-//
-//template <class T>
-//void make_graph(Graph<T> &graph) {
-//  (void) graph;
-//}
-//
-//template <class T>
-//Path<T> dijkstra(Graph<T> graph, int source, int sink) {
-//  (void) source;
-//  (void) sink;
-//
-//  for (const Node<T> & node : graph) cout << "Node: " << node << endl;
-//
-//  Path<T> path;
-//  return path;
-//}
+template <class T>
 
 int main() {
-  int N = get_next_int();
-  int start = get_next_int();
-  int end  = get_next_int();
+  int num_nodes = get_next_int(); // Number of nodes
+  Graph<int> graph(num_nodes);
+  make_graph(graph);
 
-  Graph<int> graph(N);
-  cout << graph[0] << endl;
-//  make_graph(graph);
+  int start, end;
+  cin >> start;
+  cin >> end;
 
-  // Path<int> path = dijkstra(graph, start, end);
-//  cout << path << endl;
+  Dijkstra d;
+  Path<int> path = d.run(graph, start, end);
+  cout << path << endl;
+}
+
+template <class T>
+void make_graph(Graph<T> &graph) {
+  int num_edges = get_next_int();
+
+  int from, to, weight;
+  for (int i = 0; i < num_edges; i++) {
+    cin >> from;
+    cin >> to;
+    cin >> weight;
+    graph[from].add_edge(weight, to);
+  }
 }
 
 static int get_next_int() {

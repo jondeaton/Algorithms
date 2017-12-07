@@ -13,7 +13,9 @@ include_directories(include src)
 set(SRC
         include/graph.hpp           src/graph.tpp
         include/node.hpp            src/node.tpp
-        include/vertex.hpp          src/vertex.tpp
+        include/edge.hpp
+        include/path.hpp
+        include/dijkstra.hpp
         src/dijkstra.cpp)
 
 add_executable(dijkstra ${SRC})

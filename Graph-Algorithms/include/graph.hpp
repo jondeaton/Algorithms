@@ -16,13 +16,13 @@ public:
   Graph() = default;
   explicit Graph(int N);
 
+  size_t size() { return nodes.size(); }
   void add_node();
   void add_node(T data);
   void add_node(Node<T>& node);
   Node<T>& operator[](int i);
 
   Node<T>* store;
-  std::size_t size = 0;
   typedef Node<T>* iterator;
   typedef const Node<T>* const_iterator;
 
