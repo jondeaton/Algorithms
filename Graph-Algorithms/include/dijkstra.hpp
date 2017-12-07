@@ -69,6 +69,7 @@ public:
   Path<size_t> make_path(size_t start, size_t end) {
     Path<size_t> path;
     for (size_t v = end; v != start; v = prevs[v]) path.nodes.push_back(v);
+    path.nodes.push_back(start);
     std::reverse(path.nodes.begin(), path.nodes.end());
     return path;
   }
