@@ -20,14 +20,15 @@
 template <class T>
 static inline void set_all(T* arr, T val, size_t count);
 
+template <class WT>
 struct CompareDistances {
 public:
-  explicit CompareDistances(const int* dists) : dists(dists) {}
+  explicit CompareDistances(const WT* dists) : distances(dists) {}
   bool operator()(size_t a, size_t b) {
-    return dists[a] > dists[b];
+    return distances[a] > distances[b];
   }
 private:
-  const int* dists;
+  const WT* distances;
 };
 
 template <class T, class WT>
@@ -35,18 +36,18 @@ class Dijkstra {
 
 public:
 
-  Dijkstra() : size(0) {
-    prevs = (size_t*) malloc(size);
-    dists = (int*) malloc(size);
+  Dijkstra() : data_size(0) {
+    prevs = (size_t*) malloc(data_size);
+    distances = (WT*) malloc(data_size);
   }
 
   Path<size_t> run(Graph<T, WT> graph, size_t source, size_t sink) {
 
     setup_arrays(graph.size());
-    dists[source] = 0;
+    distances[source] = 0;
 
-    CompareDistances cmp(dists);
-    std::priority_queue<size_t, std::vector<size_t>, CompareDistances> queue(cmp);
+    CompareDistances<WT> cmp(distances);
+    std::priority_queue<size_t, std::vector<size_t>, CompareDistances<WT>> queue(cmp);
     queue.push(source);
 
     while (!queue.empty()) {
@@ -54,9 +55,9 @@ public:
       if (v == sink) return make_path(source, sink);
       queue.pop();
       for (Edge<WT> edge : graph[v]) {
-        int alt = dists[v] + edge.weight;
-        if (alt < dists[edge.to]) {
-          dists[edge.to] = alt;
+        int alt = distances[v] + edge.weight;
+        if (alt < distances[edge.to]) {
+          distances[edge.to] = alt;
           prevs[edge.to] = v;
           queue.push(edge.to);
         }
@@ -76,20 +77,20 @@ public:
 
   ~Dijkstra(){
     free(prevs);
-    free(dists);
+    free(distances);
   }
 
 private:
-  size_t size;
+  size_t data_size;
   size_t* prevs;
-  int* dists;
+  WT* distances;
 
   void setup_arrays(size_t new_size) {
-    if (new_size <= size) return;
-    size = new_size;
-    prevs = (size_t*) realloc(prevs, size);
-    dists = (int*) realloc(dists, size);
-    set_all(dists, std::numeric_limits<int>::max(), size);
+    if (new_size <= data_size) return;
+    data_size = new_size;
+    prevs = (size_t*) realloc(prevs, data_size);
+    distances = (WT*) realloc(distances, data_size);
+    set_all(distances, std::numeric_limits<WT>::max(), data_size);
   }
 };
 
