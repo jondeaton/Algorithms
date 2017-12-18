@@ -17,9 +17,7 @@ set(SRC
         include/edge.hpp
         include/path.hpp
         include/graph-search.hpp    src/graph-search.cpp
-        include/dijkstra.hpp
         include/custom-priority-queue.hpp   src/custom-priority-queue.cpp
-        src/dijkstra.cpp
         src/main.cpp)
 
 add_executable(path-finding ${SRC})

@@ -10,7 +10,8 @@
  *
  */
 
-#include <set>
+#include <queue>
+#include <map>
 
 /**
  * @brief  A priority queue that supports removal and priority-
@@ -19,9 +20,11 @@
  * @tparam Compare  Comparison function object type, defaults to
  *                  less<_Sequence::value_type>.
  */
-template<typename T, class Compare=std::less<typename std::set<T>::value_type>>
-class mutable_priority_queue : public std::set<T, std::set<T>, Compare> {
+template<class T,  class Container, class Compare=std::less<typename std::vector<T>::value_type>>
+class mutable_priority_queue : public std::priority_queue<T, std::vector<T>, Compare> {
 public:
-    bool remove(const T& value);
-    bool change_priority(const T& value);
+  bool remove(const T& value);
+  bool change_priority(const T& value);
+private:
+  std::map<T, int> indices;
 };
