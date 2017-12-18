@@ -15,7 +15,7 @@ set(SRC
         include/node.hpp            src/node.tpp
         include/edge.hpp
         include/path.hpp
-        include/dijkstra.hpp
-        src/dijkstra.cpp)
+        include/graph-search.hpp    src/graph-search.cpp
+        src/main.cpp)
 
-add_executable(dijkstra ${SRC})
+add_executable(path-finding ${SRC})
