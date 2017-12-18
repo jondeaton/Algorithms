@@ -1,3 +1,4 @@
+set(CMAKE_LEGACY_CYGWIN_WIN32 0)
 cmake_minimum_required (VERSION 2.8)
 project (Graph-Algorithms)
 set (CMAKE_CXX_STANDARD 17)
@@ -16,6 +17,9 @@ set(SRC
         include/edge.hpp
         include/path.hpp
         include/graph-search.hpp    src/graph-search.cpp
+        include/dijkstra.hpp
+        include/custom-priority-queue.hpp   src/custom-priority-queue.cpp
+        src/dijkstra.cpp
         src/main.cpp)
 
 add_executable(path-finding ${SRC})
