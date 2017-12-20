@@ -10,8 +10,8 @@
 #include "graph.hpp"
 #include "node.hpp"
 #include "path.hpp"
+#include "priority-queue.hpp"
 
-#include <queue>
 #include <set>
 #include <algorithm>
 #include <limits>

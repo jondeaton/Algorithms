@@ -20,6 +20,7 @@ public:
   void add_node();
   void add_node(T data);
   void add_node(Node<T, WT>& node);
+  void add_edge(size_t from, size_t to, WT weight);
   Node<T, WT>& operator[](int i);
 
   typedef typename std::vector<Node<T, WT>>::iterator iterator;
@@ -30,7 +31,7 @@ public:
   iterator end() { return nodes.end(); }
   const_iterator end() const { return nodes.end(); }
 
-private:
+protected:
   std::vector<Node<T, WT>> nodes;
 };
 

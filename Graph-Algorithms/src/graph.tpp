@@ -29,6 +29,11 @@ void Graph<T, WT>::add_node(Node<T, WT> &node) {
 }
 
 template <class T, class WT>
+void Graph<T, WT>::add_edge(size_t from, size_t to, WT weight) {
+  nodes[from].add_edge(weight, to);
+}
+
+template <class T, class WT>
 Node<T, WT>& Graph<T, WT>::operator[](int i) {
   return nodes[i];
 }

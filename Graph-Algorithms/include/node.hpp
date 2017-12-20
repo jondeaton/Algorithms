@@ -1,7 +1,7 @@
 /**
  * File: node.hpp
  * --------------
- * Presents the interface of a graph in a node
+ * Presents the interface of a node in a graph
  */
 
 #ifndef _NODE_HPP_INCLUDED

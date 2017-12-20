@@ -33,7 +33,7 @@ Path<size_t> GraphSearcher<T, WT>::find_path(Graph<T, WT> graph, size_t source, 
   distances[source] = 0;
 
   CompareDistances<WT> cmp(distances);
-  std::priority_queue<size_t, std::vector<size_t>, CompareDistances<WT>> queue(cmp);
+  priority_queue<size_t, std::vector<size_t>, CompareDistances<WT>> queue(cmp);
   queue.push(source);
 
   while (!queue.empty()) {
