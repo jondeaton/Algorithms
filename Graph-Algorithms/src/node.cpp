@@ -1,4 +1,7 @@
 
+#ifndef _NODE_CPP_INCLUDED
+#define _NODE_CPP_INCLUDED
+
 #include <node.hpp>
 
 template <class T, class WT>
@@ -30,3 +33,5 @@ template <class T, class WT>
 Edge<WT>& Node<T, WT>::operator[](int i) {
   return edges[i];
 }
+
+#endif // _NODE_CPP_INCLUDED

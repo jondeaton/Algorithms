@@ -53,5 +53,5 @@ inline std::istream& operator>>(std::istream &is, Node<T, WT> &node) {
   return node.data >> is;
 }
 
-#include <node.tpp>
+#include <node.cpp>
 #endif // _NODE_HPP_INCLUDED

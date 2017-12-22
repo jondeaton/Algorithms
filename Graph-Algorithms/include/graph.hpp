@@ -35,5 +35,5 @@ protected:
   std::vector<Node<T, WT>> nodes;
 };
 
-#include <graph.tpp>
+#include <graph.cpp>
 #endif // _GRAPH_HPP_INCLUDED

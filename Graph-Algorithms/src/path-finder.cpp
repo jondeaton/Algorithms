@@ -1,39 +1,50 @@
 /**
  * @file path-finder.cpp
  * @brief Presents the implementation of the graph searching class
- *
  */
+
+#ifndef _PATH_FINDER_CPP_INCLUDED
+#define _PATH_FINDER_CPP_INCLUDED
 
 #include <path-finder.hpp>
 
 template <class T>
 static inline void set_all(T* arr, T val, size_t count);
 
+/**
+ * @fn CompareDistances
+ * @brief Functor for comparing distances without re-computing
+ * @tparam WT
+ */
 template <class WT>
-struct CompareDistances {
+struct ComparePriorities {
 public:
-  explicit CompareDistances(const WT* dists) : distances(dists) {}
+  ComparePriorities() : priorities(nullptr) {}
+  explicit ComparePriorities(const WT* dists) : priorities(dists) {}
   bool operator()(size_t a, size_t b) {
-    return distances[a] > distances[b];
+    return priorities[a] > priorities[b];
   }
-private:
-  const WT* distances;
+public:
+  const WT* priorities;
 };
 
-template <class T, class WT>
-PathFinder<T, WT>::PathFinder() : data_size(0) {
+template <class T, class WT, class Heuristic>
+PathFinder<T, WT, Heuristic>::PathFinder() : data_size(0) {
   prevs = (size_t*) malloc(data_size * sizeof(size_t));
   distances = (WT*) malloc(data_size * sizeof(WT));
+  if (use_Astar) priorities = (WT*) malloc(data_size * sizeof(WT));
 }
 
-template <class T, class WT>
-Path<size_t> PathFinder<T, WT>::find_path(Graph<T, WT> graph, size_t source, size_t sink) {
+template <class T, class WT, class Heuristic>
+Path<size_t> PathFinder<T, WT, Heuristic>::find_path(Graph<T, WT> graph, size_t source, size_t sink) {
 
   setup_arrays(graph.size());
   distances[source] = 0;
 
-  CompareDistances<WT> cmp(distances);
-  priority_queue<size_t, std::vector<size_t>, CompareDistances<WT>> queue(cmp);
+  ComparePriorities<WT> cmp;
+  cmp.priorities = use_Astar ? priorities : distances; // in dijkstra's the distance *is* the priority
+
+  priority_queue<size_t, true, ComparePriorities<WT>> queue(cmp);
   queue.push(source);
 
   while (!queue.empty()) {
@@ -41,21 +52,25 @@ Path<size_t> PathFinder<T, WT>::find_path(Graph<T, WT> graph, size_t source, siz
     if (v == sink) return make_path(source, sink);
     queue.pop();
     for (Edge<WT> edge : graph[v]) {
-      int alt = distances[v] + edge.weight;
-      if (alt < distances[edge.to]) {
+      WT alt = distances[v] + edge.weight;
+
+      if (alt < distances[edge.to]) { // found a faster way to get to this node
+        prevs[edge.to] = v; // Mark the new predecessor
+
         distances[edge.to] = alt;
-        prevs[edge.to] = v;
-        if (queue.contains(v)) queue.update_priority(v)
-        else queue.push(edge.to);
+        if (use_Astar) priorities[edge.to] = alt + distance_to_end(edge.to);
+
+        if (queue.contains(v)) queue.update_priority(v); // Update node priority to new value
+        else queue.push(edge.to); // Add node for the first time
       }
     }
   }
   Path<size_t> path;
-  return path; // return empty path
+  return path; // return empty path - no path found
 }
 
-template <class T, class WT, class ... Ts>
-Path<size_t> PathFinder<T, WT>::make_path(size_t start, size_t end) {
+template <class T, class WT, class Heuristic>
+Path<size_t> PathFinder<T, WT, Heuristic>::make_path(size_t start, size_t end) {
     Path<size_t> path;
   for (size_t v = end; v != start; v = prevs[v]) path.nodes.push_back(v);
   path.nodes.push_back(start);
@@ -63,19 +78,21 @@ Path<size_t> PathFinder<T, WT>::make_path(size_t start, size_t end) {
   return path;
 }
 
-template <class T, class WT>
-void PathFinder<T, WT>::setup_arrays(size_t new_size)  {
+template <class T, class WT, class Heuristic>
+void PathFinder<T, WT, Heuristic>::setup_arrays(size_t new_size)  {
   if (new_size <= data_size) return;
   data_size = new_size;
   prevs = (size_t*) realloc(prevs, data_size * sizeof(size_t));
   distances = (WT*) realloc(distances, data_size * sizeof(WT));
+  if (use_Astar) priorities = (WT*) realloc(priorities);
   set_all(distances, std::numeric_limits<WT>::max(), data_size);
 }
 
-template <class T, class WT>
-PathFinder<T, WT>::~PathFinder() {
+template <class T, class WT, class Heuristic>
+PathFinder<T, WT, Heuristic>::~PathFinder() {
   free(prevs);
   free(distances);
+  if(use_Astar) free(priorities);
 }
 
 /**
@@ -90,3 +107,5 @@ template <class T>
 static inline void set_all(T arr[], T val, size_t count) {
   for (size_t i = 0; i < count; i++) arr[i] = val;
 }
+
+#endif // _PATH_FINDER_CPP_INCLUDED

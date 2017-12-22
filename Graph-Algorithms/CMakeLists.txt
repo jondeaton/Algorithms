@@ -12,8 +12,8 @@ endif()
 include_directories(include src)
 
 set(SRC
-        include/graph.hpp           src/graph.tpp
-        include/node.hpp            src/node.tpp
+        include/graph.hpp src/graph.cpp
+        include/node.hpp src/node.cpp
         include/edge.hpp
         include/path.hpp
         include/path-finder.hpp src/path-finder.cpp

@@ -4,6 +4,9 @@
  *
  */
 
+#ifndef _GRAPH_CPP_INCLUDED
+#define _GRAPH_CPP_INCLUDED
+
 #include <graph.hpp>
 
 template <class T, class WT>
@@ -37,3 +40,5 @@ template <class T, class WT>
 Node<T, WT>& Graph<T, WT>::operator[](int i) {
   return nodes[i];
 }
+
+#endif // _GRAPH_HPP_INCLUDED

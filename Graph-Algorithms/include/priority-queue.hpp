@@ -65,7 +65,7 @@ public:
   typedef typename Container::value_type value_type;
 
   priority_queue() = default;
-  explicit priority_queue(Compare& cmp) : c(cmp), comp(cmp) {}
+  explicit priority_queue(const Compare& cmp) : c(cmp), comp(cmp) {}
 
   inline bool empty() { return c.empty(); }
   inline size_t size() { return c.size(); }
@@ -75,7 +75,7 @@ public:
   typename std::enable_if<fast_top>::type
   push(const T& value) {
     c.push_back(value);
-    bubble_up(size() - 1);
+    bubble_up((int) size() - 1);
   }
 
   template <bool is_enabled = fast_top>
@@ -114,9 +114,6 @@ public:
     bubble_up(sink_down(index));
   }
 
-
-
-  ////////////////////////////////////////////////////////
   // Set implementation
   template <bool is_enabled=fast_top>
   typename std::enable_if<!is_enabled>::type
@@ -146,10 +143,6 @@ public:
     remove(value);
     push(value);
   }
-
-  template <class ... Args>
-  typename std::enable_if<!fast_top>::type
-  emplace(Args&&... args) { c.emplace(args ...); }
 
 protected:
   Container c;

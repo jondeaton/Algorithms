@@ -29,38 +29,51 @@ void test_dijkstra() {
   cin >> start;
   cin >> end;
 
-  PathFinder<int, int> searcher;
-  auto path = searcher.find_path(graph, start, end);
+  PathFinder<int, int> path_finder;
+  auto path = path_finder.find_path(graph, start, end);
   cout << path << endl;
 }
 
 /**
- * Functor: DistanceToEnd
- * ----------------------
- * Defines a functor that can calculate the distance from
- * @tparam T:
+ * @fn DistanceToEnd
+ * @brief Defines a functor that can calculate the distance from any two arbitrary points
+ * @tparam T
  */
 template <class T, class CMP>
 class DistanceToEnd {
-  DistanceToEnd(T distances[], size_t i): distances(distances) { };
+  DistanceToEnd(T distances[], size_t numel, size_t end_index): distances(distances), end_index(end_index) {
+    set = (bool*) calloc(numel * sizeof(bool), 1);
+    distances[end_index] = 0;
+    set[end_index] = true;
+  };
 
   T operator()(int i) {
     if (set[i]) return distances[i];
+
+    // todo: ehh yeah something needs to be fixed here
+
+
     set[i] = true;
     return distances[i] = cmp();
   }
 
+  ~DistanceToEnd(){
+    free(set);
+  }
+
 private:
+  size_t end_index;
   CMP cmp;
-  bool set[];
-  T distances[];
+  bool* set;
+  T* distances;
 };
 
 void test_Astar() {
   ifstream in("/Users/jonpdeaton/GitHub/Algorithms/Graph-Algorithms/Astar-test");
   cin.rdbuf(in.rdbuf());
 
-  PathFinder<int, int, float> searcher;
+
+  PathFinder<int, int, DistanceToEnd> searcher();
 
 }
 
