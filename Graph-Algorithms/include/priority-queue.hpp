@@ -76,8 +76,6 @@ public:
 
   typename std::enable_if<fast_top>::type
   void pop() {
-    T min = top();
-
     c[0] = c.back();
     c.pop_back();
     sink_down(0);
@@ -100,10 +98,10 @@ public:
   typename std::enable_if<fast_top>::type
   void update_priority(const T& value) {
     size_t index = indices[value];
+    bubble_up(sink_down(index));
   }
 
   // Set implementation
-
   typename std::enable_if<!fast_top>::type
   void push(std::enable_if<!fast_top, const T&>::type value) { c.insert(value); }
 
@@ -141,38 +139,45 @@ private:
   typename <std::enable_if<fast_top>>::type
   std::map<T, size_t> indices;
 
-  void bubble_up(size_t index) {
-    if (index == 0) return; // at root
-
+  typename <std::enable_if<fast_top>>::type
+  size_t bubble_up(size_t index) {
+    if (index == 0) return 0;     // at root
     int parent = parent_of(index);
     if (comp(c[index], c[parent])) {
       swap(index, parent);
-      bubble_up(parent);
-    }
+      return bubble_up(parent);
+    } else return index;
   }
 
-  void sink_down(size_t index) {
+  typename <std::enable_if<fast_top>>::type
+  size_t sink_down(size_t index) {
     size_t left = left_of(index);     // Index of left child
     size_t right = right_of(index);   // Index of right child
-    if (left >= size()) return;       // No children
+    if (left >= size()) return index;    // No children
 
-    if (c[index] > c[left] && c[left] <= c[right]) {
+    if (comp(c[left], c[index]) && comp(c[left], c[right])) {
       swap(left, index);
-      sink_down(left);
-    } else if (c[index] > c[right] && c[right] <= c[left]) {
+      return sink_down(left);
+    } else if (comp(c[index], c[right]) && comp(c[right], c[left])) {
       swap(right, index);
-      sink_down(right);
-    }
+      return sink_down(right);
+    } else return index;
   }
 
+  typename <std::enable_if<fast_top>>::type
   void swap(size_t indexA, size_t indexB) {
     T temp = c[indexA];
     c[indexA] = c[indexB];
     c[indexB] = temp;
   }
 
+  typename <std::enable_if<fast_top>>::type
   inline size_t left_of(size_t index) { return 2 * (index + 1) - 1; }
+
+  typename <std::enable_if<fast_top>>::type
   inline size_t right_of(size_t index) { return 1 + left_of(index); }
+
+  typename <std::enable_if<fast_top>>::type
   inline int parent_of(size_t index) { return (int) (index + 1) / 2 - 1; }
 };
 
