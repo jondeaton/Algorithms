@@ -18,22 +18,23 @@
 #include <vector>
 #include <map>
 
-#include <queue>
-std::priority_queue<int> e;
-
 template <bool, class T, class... Ts>
-static struct default_container<false> {
+struct default_container
+{};
+
+template <class T, class... Ts>
+struct default_container<false, T, Ts...> {
   typedef std::set<T, Ts...> type;
 };
 
-template <bool, class T, class... Ts>
-static struct default_container<true> {
+template <class T, class... Ts>
+struct default_container<true, T, Ts...> {
   typedef std::vector<T> type;
 };
 
 template <class T, class Compare>
-static struct TrueCmp {
-  TrueCmp(Compare comp, const T& t) : comp(comp), t(t) = default;
+struct TrueCmp {
+  TrueCmp(const T& t, Compare comp) : t(t), comp(comp) {};
   bool operator() (const T& a, const T& b) {
     if (a == t) return true;
     if (b == t) return false;
@@ -42,11 +43,11 @@ static struct TrueCmp {
 
 private:
   const T& t;
-  Compare comp;
+  const Compare& comp;
 };
 
 /**
- * @brief  A priority queue that supports removal and priority-
+ * @brief  A priority queue that supports removal and priority-updating
  * @tparam T  Type of element stored in the priority queue.
  * @tparam Container  The container to use to store the elements. Must support insert, find, end/begin, and erase
  * @tparam Compare  Comparison function object type, defaults to
@@ -56,11 +57,13 @@ private:
  */
 template<
   class T,
-  class Container=default_container<fast_top, T, Compare>::type,
-  class Compare=std::less<typename Container::value_type>,
-  bool fast_top=false>
+  bool fast_top=false,
+  class Compare=typename std::less<T>,
+  class Container=typename default_container<fast_top, T, Compare>::type>
 class priority_queue {
 public:
+  typedef typename Container::value_type value_type;
+
   priority_queue() = default;
   explicit priority_queue(Compare& cmp) : c(cmp), comp(cmp) {}
 
@@ -68,117 +71,127 @@ public:
   inline size_t size() { return c.size(); }
   T& top() { return c.begin(); }
 
+  template <bool is_enabled = fast_top>
   typename std::enable_if<fast_top>::type
-  void push(const T& value) {
+  push(const T& value) {
     c.push_back(value);
-    return bubble_up(size() - 1);
+    bubble_up(size() - 1);
   }
 
-  typename std::enable_if<fast_top>::type
-  void pop() {
+  template <bool is_enabled = fast_top>
+  typename std::enable_if<is_enabled>::type
+  pop() {
     c[0] = c.back();
     c.pop_back();
     sink_down(0);
   }
 
-  typename std::enable_if<fast_top>::type
-  bool remove(const T& value) {
+  template <bool is_enabled = fast_top>
+  typename std::enable_if<is_enabled, bool>::type
+  inline contains(const T& value) {
+    return indices.find(value) != indices.end();
+  }
+
+  template <bool is_enabled = fast_top>
+  typename std::enable_if<is_enabled, bool>::type
+  remove(const T& value) {
     if (indices.find(value) == indices.end()) return false;
 
     Compare comp_temp = comp;
-    comp = new TrueCmp(comp, value);
+    comp = new TrueCmp<T, Compare>(value, comp);
 
-    size_t index = indices[value];
+    int index = indices[value];
     bubble_up(index);
 
     pop();
     return true;
   }
 
-  typename std::enable_if<fast_top>::type
-  void update_priority(const T& value) {
-    size_t index = indices[value];
+  template <bool is_enabled = fast_top>
+  typename std::enable_if<is_enabled>::type
+  update_priority(const T& value) {
+    int index = indices[value];
     bubble_up(sink_down(index));
   }
 
-  // Set implementation
-  typename std::enable_if<!fast_top>::type
-  void push(std::enable_if<!fast_top, const T&>::type value) { c.insert(value); }
 
-  typename std::enable_if<!fast_top>::type
-  void pop() {
+
+  ////////////////////////////////////////////////////////
+  // Set implementation
+  template <bool is_enabled=fast_top>
+  typename std::enable_if<!is_enabled>::type
+  push(const T& value) {
+    c.insert(value);
+  }
+
+  template <bool is_enabled=fast_top>
+  typename std::enable_if<!is_enabled>::type
+  pop() {
     if (c.empty()) return;
     c.erase(top());
   }
 
-  typename std::enable_if<!fast_top>::type
-  bool remove(const T& value) {
+  template <bool is_enabled=fast_top>
+  typename std::enable_if<!is_enabled, bool>::type
+  remove(const T& value) {
     auto it = c.find(value);
     if (it == c.end()) return false;
     c.erase(it);
     return true;
   }
 
-  typename std::enable_if<!fast_top>::type
-  void update_priority(const T& value) {
+  template <bool is_enabled=fast_top>
+  typename std::enable_if<!is_enabled>::type
+  update_priority(const T& value) {
     remove(value);
     push(value);
   }
 
   template <class ... Args>
   typename std::enable_if<!fast_top>::type
-  void emplace(Args&&... args) {
-    c.emplace(args ...);
-  }
+  emplace(Args&&... args) { c.emplace(args ...); }
 
 protected:
   Container c;
   Compare comp;
 
 private:
-  typename <std::enable_if<fast_top>>::type
-  std::map<T, size_t> indices;
+  // Maps values to index within the min heap
+  typename std::enable_if<fast_top, std::map<T, int>>::type indices;
 
-  typename <std::enable_if<fast_top>>::type
-  size_t bubble_up(size_t index) {
-    if (index == 0) return 0;     // at root
+  typename std::enable_if<fast_top, int>::type
+  bubble_up(int index) {
+    if (index == 0) return 0;         // at root
     int parent = parent_of(index);
     if (comp(c[index], c[parent])) {
-      swap(index, parent);
+      std::swap(c[index], c[parent]);
       return bubble_up(parent);
     } else return index;
   }
 
-  typename <std::enable_if<fast_top>>::type
-  size_t sink_down(size_t index) {
-    size_t left = left_of(index);     // Index of left child
-    size_t right = right_of(index);   // Index of right child
+  typename std::enable_if<fast_top, int>::type
+  sink_down(int index) {
+    int left = left_of(index);     // Index of left child
+    int right = right_of(index);   // Index of right child
     if (left >= size()) return index;    // No children
 
     if (comp(c[left], c[index]) && comp(c[left], c[right])) {
-      swap(left, index);
+      std::swap(c[left], c[index]);
       return sink_down(left);
     } else if (comp(c[index], c[right]) && comp(c[right], c[left])) {
-      swap(right, index);
+      std::swap(c[right], c[index]);
       return sink_down(right);
     } else return index;
   }
 
-  typename <std::enable_if<fast_top>>::type
-  void swap(size_t indexA, size_t indexB) {
-    T temp = c[indexA];
-    c[indexA] = c[indexB];
-    c[indexB] = temp;
-  }
+  typename std::enable_if<fast_top, int>::type
+  inline left_of(int index) { return 2 * (index + 1) - 1; }
 
-  typename <std::enable_if<fast_top>>::type
-  inline size_t left_of(size_t index) { return 2 * (index + 1) - 1; }
+  typename std::enable_if<fast_top, int>::type
+  inline right_of(int index) { return 1 + left_of(index); }
 
-  typename <std::enable_if<fast_top>>::type
-  inline size_t right_of(size_t index) { return 1 + left_of(index); }
-
-  typename <std::enable_if<fast_top>>::type
-  inline int parent_of(size_t index) { return (int) (index + 1) / 2 - 1; }
+  typename std::enable_if<fast_top, int>::type
+  inline parent_of(int index) { return (index + 1) / 2 - 1; }
 };
 
 #endif //_PRIORITY_QUEUE_INCLUDED_HPP

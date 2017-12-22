@@ -6,7 +6,7 @@
 
 #include "graph.hpp"
 #include "path.hpp"
-#include "graph-search.hpp"
+#include "path-finder.hpp"
 #include <iostream>
 #include <fstream>
 #include <ctime>
@@ -29,7 +29,7 @@ void test_dijkstra() {
   cin >> start;
   cin >> end;
 
-  GraphSearcher<int, int> searcher;
+  PathFinder<int, int> searcher;
   auto path = searcher.find_path(graph, start, end);
   cout << path << endl;
 }
@@ -60,7 +60,7 @@ void test_Astar() {
   ifstream in("/Users/jonpdeaton/GitHub/Algorithms/Graph-Algorithms/Astar-test");
   cin.rdbuf(in.rdbuf());
 
-  GraphSearcher<int, int, float> searcher;
+  PathFinder<int, int, float> searcher;
 
 }
 

@@ -25,12 +25,12 @@
  * @tparam WT: The type of data stored in the weights of the graphs
  */
 template <class T, class WT, class ... Ts>
-class GraphSearcher {
+class PathFinder {
 public:
-  GraphSearcher();
+  PathFinder();
   Path<size_t> find_path(Graph<T, WT> graph, size_t source, size_t sink);
   Path<size_t> make_path(size_t start, size_t end);
-  ~GraphSearcher();
+  ~PathFinder();
 
 private:
   size_t data_size;
