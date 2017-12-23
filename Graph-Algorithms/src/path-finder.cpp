@@ -17,7 +17,7 @@ static inline void set_all(T* arr, T val, size_t count);
  * @tparam WT
  */
 template <class WT>
-struct ComparePriorities {
+struct ComparePriorities : public std::binary_function<size_t, size_t, bool> {
 public:
   ComparePriorities() : priorities(nullptr) {}
   explicit ComparePriorities(const WT* dists) : priorities(dists) {}
@@ -28,15 +28,15 @@ public:
   const WT* priorities;
 };
 
-template <class T, class WT, class Heuristic>
-PathFinder<T, WT, Heuristic>::PathFinder() : data_size(0) {
+template <class Graph, class Heuristic>
+PathFinder<Graph, Heuristic>::PathFinder() : data_size(0) {
   prevs = (size_t*) malloc(data_size * sizeof(size_t));
   distances = (WT*) malloc(data_size * sizeof(WT));
   if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
 }
 
-template <class T, class WT, class Heuristic>
-Path<size_t> PathFinder<T, WT, Heuristic>::find_path(Graph<T, WT> graph, size_t source, size_t sink) {
+template <class Graph, class Heuristic>
+Path<size_t> PathFinder<Graph, Heuristic>::find_path(Graph graph, size_t source, size_t sink) {
 
   setup_arrays(graph.size());
   distances[source] = 0;
@@ -70,8 +70,8 @@ Path<size_t> PathFinder<T, WT, Heuristic>::find_path(Graph<T, WT> graph, size_t 
   return path; // return empty path - no path found
 }
 
-template <class T, class WT, class Heuristic>
-Path<size_t> PathFinder<T, WT, Heuristic>::make_path(size_t start, size_t end) {
+template <class Graph, class Heuristic>
+Path<size_t> PathFinder<Graph, Heuristic>::make_path(size_t start, size_t end) {
     Path<size_t> path;
   for (size_t v = end; v != start; v = prevs[v]) path.nodes.push_back(v);
   path.nodes.push_back(start);
@@ -79,18 +79,18 @@ Path<size_t> PathFinder<T, WT, Heuristic>::make_path(size_t start, size_t end) {
   return path;
 }
 
-template <class T, class WT, class Heuristic>
-void PathFinder<T, WT, Heuristic>::setup_arrays(size_t new_size)  {
+template <class Graph, class Heuristic>
+void PathFinder<Graph, Heuristic>::setup_arrays(size_t new_size)  {
   if (new_size <= data_size) return;
   data_size = new_size;
   prevs = (size_t*) realloc(prevs, data_size * sizeof(size_t));
   distances = (WT*) realloc(distances, data_size * sizeof(WT));
-  if constexpr (use_Astar) this->priorities = (WT*) realloc(this->priorities);
+  if constexpr (use_Astar) this->priorities = (WT*) realloc(this->priorities, 1);
   set_all(distances, std::numeric_limits<WT>::max(), data_size);
 }
 
-template <class T, class WT, class Heuristic>
-PathFinder<T, WT, Heuristic>::~PathFinder() {
+template <class Graph, class Heuristic>
+PathFinder<Graph, Heuristic>::~PathFinder() {
   free(prevs);
   free(distances);
   if constexpr (use_Astar) free(this->priorities);

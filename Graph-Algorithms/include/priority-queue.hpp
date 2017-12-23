@@ -32,8 +32,8 @@ struct default_container<true, T, Ts...> {
 };
 
 template <class T, class Compare>
-struct TrueCmp {
-  TrueCmp(const T& t, Compare comp) : t(t), comp(comp) {};
+struct CmpException {
+  CmpException(const T& t, Compare comp) : t(t), comp(comp) {};
   bool operator() (const T& a, const T& b) {
     if (a == t) return true;
     if (b == t) return false;
@@ -69,8 +69,8 @@ public:
   typedef typename Container::difference_type       difference_type;
   typedef typename Container::const_iterator        iterator;
   typedef typename Container::const_iterator        const_iterator;
-  typedef std::reverse_iterator<iterator>       reverse_iterator;
-  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+  typedef std::reverse_iterator<iterator>           reverse_iterator;
+  typedef std::reverse_iterator<const_iterator>     const_reverse_iterator;
 
   priority_queue() = default;
 
@@ -111,7 +111,7 @@ public:
     if (indices.find(value) == indices.end()) return false;
 
     Compare comp_temp = comp;
-    comp = new TrueCmp<T, Compare>(value, comp);
+    comp = new CmpException<T, Compare>(value, comp);
 
     int index = indices[value];
     bubble_up(index);
@@ -152,7 +152,7 @@ public:
 
   template <bool is_enabled=fast_top>
   typename std::enable_if<!is_enabled>::type
-  update_priority(const T& value) {
+  inline update_priority(const T& value) {
     remove(value);
     push(value);
   }
@@ -171,6 +171,7 @@ private:
     int parent = parent_of(index);
     if (comp(c[index], c[parent])) {
       std::swap(c[index], c[parent]);
+      indices[c[index]] = index;
       return bubble_up(parent);
     } else return index;
   }
@@ -183,11 +184,13 @@ private:
 
     if (comp(c[left], c[index]) && comp(c[left], c[right])) {
       std::swap(c[left], c[index]);
+      indices[c[index]] = index;
       return sink_down(left);
     } else if (comp(c[index], c[right]) && comp(c[right], c[left])) {
       std::swap(c[right], c[index]);
+      indices[c[index]] = index;
       return sink_down(right);
-    } else return index;
+    } else return index; // all done!
   }
 
   typename std::enable_if<fast_top, int>::type

@@ -16,6 +16,9 @@ public:
   Graph() = default;
   explicit Graph(size_t N);
 
+  typedef T data_type;
+  typedef WT weight_type;
+
   size_t size() { return nodes.size(); }
   void add_node();
   void add_node(T data);

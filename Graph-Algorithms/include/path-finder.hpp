@@ -1,7 +1,6 @@
 /**
- * File: graph-search.hpp
- * ----------------------
- * Presents the interface of graph searching class
+ * @file graph-search.hpp
+ * @brief Presents the interface of graph searching class
  */
 
 #ifndef _PATH_FINDER_HPP_INCLUDED
@@ -32,10 +31,10 @@ struct if_<false, if_true, if_false> {
 
 class Empty {};
 
-template <class T, class WT, class Heuristic>
+template <class Graph, class Heuristic>
 class PathFinderDijkstra {
 public:
-  WT* priorities;
+  typename Graph::weight_type* priorities;
   Heuristic distance_to_end;
 };
 
@@ -46,9 +45,11 @@ public:
  * @tparam WT The type of data stored in the weights of the graphs
  * @tparam Heuristic The type of function used to get a heuristic
  */
-template <class T, class WT, class Heuristic=void>
-class PathFinder : if_<std::is_void<Heuristic>::value, Empty, PathFinderDijkstra<T, WT, Heuristic>>::value {
+template <class Graph, class Heuristic=void>
+class PathFinder : if_<std::is_void<Heuristic>::value, Empty, PathFinderDijkstra<Graph, Heuristic>>::value {
 public:
+  typedef typename Graph::data_type T;
+  typedef typename Graph::weight_type WT;
   static constexpr bool use_Astar = !std::is_void<Heuristic>::value;
 
   PathFinder();
@@ -61,7 +62,7 @@ public:
     this->distance_to_end = heuristic;
   }
 
-  Path<size_t> find_path(Graph<T, WT> graph, size_t source, size_t sink);
+  Path<size_t> find_path(Graph graph, size_t source, size_t sink);
   Path<size_t> make_path(size_t start, size_t end);
   ~PathFinder();
 
