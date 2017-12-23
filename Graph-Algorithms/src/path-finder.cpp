@@ -32,7 +32,7 @@ template <class T, class WT, class Heuristic>
 PathFinder<T, WT, Heuristic>::PathFinder() : data_size(0) {
   prevs = (size_t*) malloc(data_size * sizeof(size_t));
   distances = (WT*) malloc(data_size * sizeof(WT));
-  if (use_Astar) priorities = (WT*) malloc(data_size * sizeof(WT));
+  if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
 }
 
 template <class T, class WT, class Heuristic>
@@ -42,23 +42,24 @@ Path<size_t> PathFinder<T, WT, Heuristic>::find_path(Graph<T, WT> graph, size_t 
   distances[source] = 0;
 
   ComparePriorities<WT> cmp;
-  cmp.priorities = use_Astar ? priorities : distances; // in dijkstra's the distance *is* the priority
+  if constexpr (use_Astar) cmp.priorities = this->priorities;
+  else cmp.priorities = distances; // in dijkstra's path distance *is* priority
 
   priority_queue<size_t, true, ComparePriorities<WT>> queue(cmp);
   queue.push(source);
 
   while (!queue.empty()) {
-    size_t v = queue.top();
+    size_t v = *queue.top();
     if (v == sink) return make_path(source, sink);
     queue.pop();
     for (Edge<WT> edge : graph[v]) {
-      WT alt = distances[v] + edge.weight;
+      WT alt_distance = distances[v] + edge.weight;
 
-      if (alt < distances[edge.to]) { // found a faster way to get to this node
+      if (alt_distance < distances[edge.to]) { // found a faster way to get to this node
         prevs[edge.to] = v; // Mark the new predecessor
 
-        distances[edge.to] = alt;
-        if (use_Astar) priorities[edge.to] = alt + distance_to_end(edge.to);
+        distances[edge.to] = alt_distance;
+        if constexpr (use_Astar) this->priorities[edge.to] = alt_distance + this->distance_to_end(edge.to);
 
         if (queue.contains(v)) queue.update_priority(v); // Update node priority to new value
         else queue.push(edge.to); // Add node for the first time
@@ -84,7 +85,7 @@ void PathFinder<T, WT, Heuristic>::setup_arrays(size_t new_size)  {
   data_size = new_size;
   prevs = (size_t*) realloc(prevs, data_size * sizeof(size_t));
   distances = (WT*) realloc(distances, data_size * sizeof(WT));
-  if (use_Astar) priorities = (WT*) realloc(priorities);
+  if constexpr (use_Astar) this->priorities = (WT*) realloc(this->priorities);
   set_all(distances, std::numeric_limits<WT>::max(), data_size);
 }
 
@@ -92,7 +93,7 @@ template <class T, class WT, class Heuristic>
 PathFinder<T, WT, Heuristic>::~PathFinder() {
   free(prevs);
   free(distances);
-  if(use_Astar) free(priorities);
+  if constexpr (use_Astar) free(this->priorities);
 }
 
 /**

@@ -19,8 +19,7 @@
 #include <map>
 
 template <bool, class T, class... Ts>
-struct default_container
-{};
+struct default_container {};
 
 template <class T, class... Ts>
 struct default_container<false, T, Ts...> {
@@ -46,6 +45,7 @@ private:
   const Compare& comp;
 };
 
+#include <queue>
 /**
  * @brief  A priority queue that supports removal and priority-updating
  * @tparam T  Type of element stored in the priority queue.
@@ -63,13 +63,26 @@ template<
 class priority_queue {
 public:
   typedef typename Container::value_type value_type;
+  typedef typename Container::pointer               pointer;
+  typedef typename Container::const_pointer         const_pointer;
+  typedef typename Container::size_type             size_type;
+  typedef typename Container::difference_type       difference_type;
+  typedef typename Container::const_iterator        iterator;
+  typedef typename Container::const_iterator        const_iterator;
+  typedef std::reverse_iterator<iterator>       reverse_iterator;
+  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
   priority_queue() = default;
-  explicit priority_queue(const Compare& cmp) : c(cmp), comp(cmp) {}
+
+  template <bool enable=fast_top>
+  explicit priority_queue(typename std::enable_if<enable, const Compare&>::type cmp) : comp(cmp) {}
+
+  template <bool enable=fast_top>
+  explicit priority_queue(typename std::enable_if<!enable, const Compare&>::type cmp) : c(cmp), comp(cmp) {}
 
   inline bool empty() { return c.empty(); }
   inline size_t size() { return c.size(); }
-  T& top() { return c.begin(); }
+  iterator top() { return c.begin(); }
 
   template <bool is_enabled = fast_top>
   typename std::enable_if<fast_top>::type
@@ -166,7 +179,7 @@ private:
   sink_down(int index) {
     int left = left_of(index);     // Index of left child
     int right = right_of(index);   // Index of right child
-    if (left >= size()) return index;    // No children
+    if (left >= (int) size()) return index;    // No children
 
     if (comp(c[left], c[index]) && comp(c[left], c[right])) {
       std::swap(c[left], c[index]);

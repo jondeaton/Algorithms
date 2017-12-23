@@ -72,9 +72,6 @@ void test_Astar() {
   ifstream in("/Users/jonpdeaton/GitHub/Algorithms/Graph-Algorithms/Astar-test");
   cin.rdbuf(in.rdbuf());
 
-
-  PathFinder<int, int, DistanceToEnd> searcher();
-
 }
 
 int main() {
