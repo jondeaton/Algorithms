@@ -8,11 +8,6 @@
 #include "path.hpp"
 #include "path-finder.hpp"
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/strategies/default_distance_result.hpp>
-#include <boost/geometry/strategies/distance_result.hpp>
-
 #include <tuple>
 #include <cmath>
 #include <fstream>
@@ -25,7 +20,30 @@ template <class Graph>
 static void make_graph(Graph &graph);
 
 template <class Coordinate>
-static void get_coordinates(vector<Coordinate> coords);
+static void get_coordinates(vector<Coordinate> &coordinates, size_t N);
+
+template <size_t I, class T, class... Ts>
+typename enable_if<I < sizeof...(Ts) + 1, T>::type
+euclidian_square_distance(const tuple<T, Ts...>& x, const tuple<T, Ts...>& y) {
+  auto diff = get<0>(x) - get<0>(y);
+  return diff * diff + euclidian_square_distance<I+1, T, Ts...>(x, y);
+}
+
+template <size_t I, class T, class... Ts>
+typename enable_if<I == sizeof...(Ts) + 1, T>::type
+euclidian_square_distance(const tuple<T, Ts...>& x, const tuple<T, Ts...>& y) {
+  (void) x;
+  (void) y;
+  return 0;
+}
+
+template <class Coordinate>
+class distance_function {
+public:
+  double operator() (const Coordinate& x, const Coordinate& y) {
+    return sqrt(euclidian_square_distance(x, y));
+  }
+};
 
 /**
  * @fn DistanceToEnd
@@ -36,10 +54,12 @@ static void get_coordinates(vector<Coordinate> coords);
  */
 template <class Distance, class Coordinate, class DistanceFn>
 class DistanceToEnd {
-  DistanceToEnd(Distance distances[], size_t numel, size_t end_index
-                DistanceFn f, Coordinate) :
-  distances(distances), end_index(end_index), f(f) {
+public:
+  DistanceToEnd(const vector<Coordinate>& coordinates, size_t end_index) : end_index(end_index) {
+    size_t numel = coordinates.size();
     set = (bool*) calloc(numel * sizeof(bool), 1);
+
+    distances = (Distance*) malloc(numel * sizeof(Distance));
     distances[end_index] = 0;
     set[end_index] = true;
   };
@@ -54,6 +74,7 @@ class DistanceToEnd {
 
   ~DistanceToEnd(){
     free(set);
+    free(distances);
   }
 
 private:
@@ -71,27 +92,25 @@ void test_Astar() {
   ifstream in("/Users/jonpdeaton/GitHub/Algorithms/Graph-Algorithms/Astar-test");
   cin.rdbuf(in.rdbuf());
 
-  typedef typename boost::geometry::cs::cartesian cartesian;
-  typedef typename boost::geometry::model::point<double, 2, cartesian> point;
-  typedef typename boost::geometry::default_distance_result<cartesian, cartesian> distance;
+  typedef Graph<float, float> graph;
+  typedef tuple<float, float> coordinate;
+  typedef DistanceToEnd<float, coordinate, distance_function<coordinate>> distance_fn;
 
-  Graph<float, float> graph;
-  make_graph(graph);
-  
-  vector<point> coordinates;
-  get_coordinates(coordinates);
+  graph g;
+  make_graph(g);
+
+  vector<coordinate> coordinates;
+  get_coordinates(coordinates, g.size());
 
   size_t start, end;
   cin >> start;
   cin >> end;
 
-
-
   // Find the path
-  DistanceToEnd<> h();
-  PathFinder<Graph<int, int>, DistanceToEnd<float, point, distance>> path_finder(h);
-  auto path = path_finder.find_path(graph, start, end);
-  cout << path << endl;
+  distance_fn h(coordinates, end);
+//  PathFinder<graph, distance_fn> path_finder(h);
+//  auto path = path_finder.find_path(g, start, end);
+//  cout << path << endl;
 }
 
 void test_dijkstra() {
@@ -142,7 +161,10 @@ static void make_graph(Graph &graph) {
 }
 
 template <class Coordinate>
-static void get_coordinates(vector<Coordinate>& coordinates) {
-
-  // todo
+static void get_coordinates(vector<Coordinate> &coordinates, size_t N) {
+  for (size_t i = 0; i < N; ++i) {
+    Coordinate c;
+    // cin >> c;
+    coordinates.push_back(c);
+  }
 }

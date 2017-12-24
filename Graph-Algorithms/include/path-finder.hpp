@@ -55,7 +55,7 @@ public:
   PathFinder();
 
   template <bool enable=use_Astar>
-  PathFinder(const typename std::enable_if<enable, Heuristic>& heuristic) : data_size(0) {
+  explicit PathFinder(const typename std::enable_if<enable, Heuristic>& heuristic) : data_size(0) {
     prevs = (size_t*) malloc(data_size * sizeof(size_t));
     distances = (WT*) malloc(data_size * sizeof(WT));
     if (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
