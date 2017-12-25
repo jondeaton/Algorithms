@@ -17,6 +17,7 @@ set(SRC
         include/node.hpp src/node.cpp
         include/edge.hpp
         include/path.hpp
+        include/coordinate.h
         include/path-finder.hpp src/path-finder.cpp
         include/priority-queue.hpp
         src/main.cpp)

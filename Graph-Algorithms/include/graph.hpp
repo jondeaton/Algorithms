@@ -34,6 +34,9 @@ public:
   iterator end() { return nodes.end(); }
   const_iterator end() const { return nodes.end(); }
 
+  template <class U, class WU>
+  friend std::istream& operator>>(std::istream& is, Graph<U, WU>& graph);
+
 protected:
   std::vector<Node<T, WT>> nodes;
 };

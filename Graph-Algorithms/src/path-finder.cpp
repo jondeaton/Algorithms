@@ -29,13 +29,6 @@ public:
 };
 
 template <class Graph, class Heuristic>
-PathFinder<Graph, Heuristic>::PathFinder() : data_size(0) {
-  prevs = (size_t*) malloc(data_size * sizeof(size_t));
-  distances = (WT*) malloc(data_size * sizeof(WT));
-  if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
-}
-
-template <class Graph, class Heuristic>
 Path<size_t> PathFinder<Graph, Heuristic>::find_path(Graph graph, size_t source, size_t sink) {
 
   setup_arrays(graph.size());

@@ -154,6 +154,7 @@ public:
   typename std::enable_if<!is_enabled>::type
   inline update_priority(const T& value) {
     remove(value);
+    // todo: this is broken!
     push(value);
   }
 

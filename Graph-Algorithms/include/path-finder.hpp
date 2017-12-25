@@ -52,10 +52,15 @@ public:
   typedef typename Graph::weight_type WT;
   static constexpr bool use_Astar = !std::is_void<Heuristic>::value;
 
-  PathFinder();
+  template <bool enable=use_Astar>
+  explicit PathFinder(const typename std::enable_if<!enable, size_t>::type& data_size=0) : data_size(data_size) {
+    prevs = (size_t*) malloc(data_size * sizeof(size_t));
+    distances = (WT*) malloc(data_size * sizeof(WT));
+    if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
+  }
 
   template <bool enable=use_Astar>
-  explicit PathFinder(const typename std::enable_if<enable, Heuristic>& heuristic) : data_size(0) {
+  explicit PathFinder(const typename std::enable_if<enable, Heuristic>::type& heuristic) : data_size(0) {
     prevs = (size_t*) malloc(data_size * sizeof(size_t));
     distances = (WT*) malloc(data_size * sizeof(WT));
     if (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
