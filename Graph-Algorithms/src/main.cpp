@@ -7,16 +7,16 @@
 #include "graph.hpp"
 #include "path.hpp"
 #include "path-finder.hpp"
-#include "coordinate.h"
+#include "coordinate.hpp"
 
 #include <fstream>
 #include <iostream>
 
 using namespace std;
 
-template <class Coordinate>
-static void get_coordinates(vector<Coordinate> &coordinates, size_t N) {
-  Coordinate c;
+template <class T, size_t I>
+static void get_coordinates(vector<Coordinate<T, I>> &coordinates, size_t N) {
+  Coordinate<T, I> c;
   for (size_t i = 0; i < N; ++i) {
     cin >> c;
     coordinates.push_back(c);
@@ -90,9 +90,9 @@ void test_Astar() {
 
   // Find the path
   distance_fn h(coordinates, end);
-  PathFinder<graph, distance_fn> path_finder(h);
-  auto path = path_finder.find_path(g, start, end);
-  cout << path << endl;
+  //PathFinder<graph, distance_fn> path_finder(h);
+  //auto path = path_finder.find_path(g, start, end);
+  //cout << path << endl;
 }
 
 void test_dijkstra() {
