@@ -34,6 +34,7 @@ class Empty {};
 template <class Graph, class Heuristic>
 class PathFinderDijkstra {
 public:
+  explicit PathFinderDijkstra(const Heuristic& heuristic) : distance_to_end(heuristic) {}
   typename Graph::weight_type* priorities;
   Heuristic distance_to_end;
 };
@@ -46,24 +47,28 @@ public:
  * @tparam Heuristic The type of function used to get a heuristic
  */
 template <class Graph, class Heuristic=void>
-class PathFinder : if_<std::is_void<Heuristic>::value, Empty, PathFinderDijkstra<Graph, Heuristic>>::value {
+class PathFinder : public if_<std::is_void<Heuristic>::value, Empty, PathFinderDijkstra<Graph, Heuristic>>::value {
 public:
   typedef typename Graph::data_type T;
   typedef typename Graph::weight_type WT;
   static constexpr bool use_Astar = !std::is_void<Heuristic>::value;
 
-  template <bool enable=use_Astar>
-  explicit PathFinder(const typename std::enable_if<!enable, size_t>::type& data_size=0) : data_size(data_size) {
+  explicit PathFinder(size_t data_size=0) : data_size(data_size) {
     prevs = (size_t*) malloc(data_size * sizeof(size_t));
     distances = (WT*) malloc(data_size * sizeof(WT));
     if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
   }
 
   template <bool enable=use_Astar>
-  explicit PathFinder(const typename std::enable_if<enable, Heuristic>::type& heuristic) : data_size(0) {
+  explicit PathFinder(const typename std::enable_if<enable, Heuristic>::type& heuristic)
+    : PathFinderDijkstra<Graph, Heuristic>(heuristic) {
     prevs = (size_t*) malloc(data_size * sizeof(size_t));
     distances = (WT*) malloc(data_size * sizeof(WT));
-    if (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
+    if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
+  }
+
+  template <bool enable=use_Astar>
+  void set_heuristic(const typename std::enable_if<enable, Heuristic>::type& heuristic) {
     this->distance_to_end = heuristic;
   }
 
@@ -76,6 +81,9 @@ private:
   size_t* prevs;
   WT* distances;
   void setup_arrays(size_t new_size);
+  void initialize_arrays() {
+
+  }
 };
 
 #include <path-finder.cpp>

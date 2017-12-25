@@ -21,9 +21,9 @@ public:
   void set(T components[]) {
     memcpy(this->components, components, sizeof(T) * I);
   }
-  double distance_to(const Coordinate<T, I> &x) {
-    T sq_diff;
-    for (int i = 0; i < I; ++i) {
+  double distance_to(const Coordinate<T, I> &x) const {
+    T sq_diff = 0;
+    for (size_t i = 0; i < I; ++i) {
       T diff = x.components[i] - components[i];
       sq_diff += diff * diff;
     }

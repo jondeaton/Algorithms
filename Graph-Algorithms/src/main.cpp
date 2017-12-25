@@ -74,7 +74,7 @@ void test_Astar() {
   ifstream in("/Users/jonpdeaton/GitHub/Algorithms/Graph-Algorithms/Astar-test");
   cin.rdbuf(in.rdbuf());
 
-  typedef Graph<float, float> graph;
+  typedef Graph<int, int> graph;
   typedef Coordinate<int, 2> coordinate;
   typedef DistanceToEnd<double, coordinate, DistanceBetween<int, 2>> distance_fn;
 
@@ -90,9 +90,9 @@ void test_Astar() {
 
   // Find the path
   distance_fn h(coordinates, end);
-  //PathFinder<graph, distance_fn> path_finder(h);
-  //auto path = path_finder.find_path(g, start, end);
-  //cout << path << endl;
+  PathFinder<graph, distance_fn> path_finder(h);
+  auto path = path_finder.find_path(g, start, end);
+  cout << path << endl;
 }
 
 void test_dijkstra() {
