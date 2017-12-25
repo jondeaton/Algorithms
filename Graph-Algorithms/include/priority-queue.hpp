@@ -152,9 +152,9 @@ public:
 
   template <bool is_enabled=fast_top>
   typename std::enable_if<!is_enabled>::type
-  inline update_priority(const T& value) {
+  inline update_priority(const T& value, void (*update)()) {
     remove(value);
-    // todo: this is broken!
+    update();
     push(value);
   }
 
