@@ -1,5 +1,7 @@
-#Greatest Common Divisor
-#Uses Stein's Algorithm
+#!/usr/bin/env python
+"""
+Greatest Common Divisor (Stein's Algorithm)
+"""
 
 def gcd(a,b):
         
