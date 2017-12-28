@@ -1,11 +1,8 @@
-/*
- * File: MinHeap.tpp
- * ---------------
- * Presents the template implementation of a MinHeap data structure
+/**
+ * @file MinHeap.tpp
+ * @breif Presents the implementation of a MinHeap data structure
  *
- * Implementation details:
- *
- * Copies of all of the elements inserted into the heap are stored in a linear vector
+ * @detail Copies of all of the elements inserted into the heap are stored in a linear vector
  * that represents a binary tree. This binary tree is sorted such that the values of the child nodes
  * of any node are greater than or equal to the value of the node.
  * The minimum element (root) is stored at the zero'th index of this array.
@@ -96,16 +93,16 @@ bool MinHeap<T>::search(const T& query, size_t start) {
 }
 
 template <class T>
-size_t MinHeap<T>::leftOf(size_t index) {
+inline size_t MinHeap<T>::leftOf(size_t index) {
   return 2 * (index + 1) - 1;
 }
 
 template <class T>
-size_t MinHeap<T>::rightOf(size_t index) {
+inline size_t MinHeap<T>::rightOf(size_t index) {
   return 1 + leftOf(index);
 }
 
 template <class T>
-int MinHeap<T>::parentOf(size_t index) {
+inline int MinHeap<T>::parentOf(size_t index) {
   return (index + 1) / 2 - 1;
 }
