@@ -3,7 +3,8 @@
 Given a template and a pattern where the pattern is 
 a string of "a" and "b" characters, determine if
 there is some way to replace "a" and "b" with 
-some string in the pattern to produce the tempalte.
+two strings, respectively, in the pattern to produce
+the tempalte.
 '''
 
 def isMatch(template, pattern):

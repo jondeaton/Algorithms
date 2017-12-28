@@ -13,7 +13,6 @@ Your task is to compute in how many ways they can pick a pair of astronauts
 belonging to different countries. 
 """
 
-
 def solution(adj, N, P): 
     visited = [False for _ in xrange(N)]    
     

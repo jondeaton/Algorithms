@@ -1,7 +1,6 @@
 /*
- * File: majority-element.cpp
- * --------------------------
- * Problem: A majority element is an element that makes up more than half of
+ * @file majority-element.cpp
+ * @detail Problem: A majority element is an element that makes up more than half of
  * the items in an array. Given a positive integers array, find the majority element.
  * If there is no majority element return -1.
  */
@@ -18,11 +17,11 @@ int findMajorityElement(vector<int> array) {
 }
 
 /**
- * Function: getCandidate
- * ----------------------
- * Finds a candidate majority element
- * @param array: An array to search for a majority element candidate in
- * @return:==
+ * @fn getCandidate
+ * @breif Finds a candidate majority element. The candidate majority element is
+ * the element which may be the majority element
+ * @param array An array to search for a majority element candidate in
+ * @return A candidate majority element
  */
 static int getCandidate(vector<int> array) {
   int candidate = 0;

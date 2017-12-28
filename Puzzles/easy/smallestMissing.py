@@ -14,8 +14,7 @@ def findSmallestMissing(arr):
 	low = 0
 	for n in arr:
 		d.add(n)
-		if n < low:
-			low = n
+		if n < low: low = n
 
 	x = low + 1
     while x in d:
@@ -35,8 +34,7 @@ def smallestMissing(A):
 			n = A[x]:
 			A[x] = x
 			x = n
-
+			
 	for i in xrange(N):
-		if A[i] != i:
-			return i
+		if A[i] != i: return i
 	return N

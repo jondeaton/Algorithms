@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 """
-
+Find the strictly increasing subsequence with the greatest sum
 """
 
 def LIS(arr):

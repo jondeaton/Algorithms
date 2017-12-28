@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+Given a tree, find the number of cuts that could be made
+so that all graphs formed have an even number of nodes
+"""
 
 import sys
 

@@ -1,4 +1,7 @@
-
+#!/usr/bin/env python
+"""
+Find a path through a maze
+"""
 
 def answer(isFree):
 	c = len(isFree[0])
@@ -27,8 +30,7 @@ def existsPath(isFree, wasVisited, start):
 	wasVisited[r][c] = True
 	return existsPath(isFree, wasVisited, [r + 1, c]) or existsPath(isFree, wasVisited, [r, c + 1])
 
-if __name__ == "__main__":
-
+def main():
 	maze = [[True, True, True] for _ in range(3)]
 	print(answer(maze))
 
@@ -39,3 +41,5 @@ if __name__ == "__main__":
 	maze = [[True, False, True] for _ in range(10)]
 	maze[5][1] = True
 	print(answer(maze))
+
+if __name__ == "__main__": main()
