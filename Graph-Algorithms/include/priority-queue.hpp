@@ -35,6 +35,8 @@ struct default_container<true, T, Ts...> {
 
 template <class T>
 class priority_queue_base {
+public:
+  priority_queue_base() = default;
 protected:
   std::map<T, int> indices;
 };
@@ -54,7 +56,7 @@ template<
   bool fast_top=false,
   class Compare=typename std::less<T>,
   class Container=typename default_container<fast_top, T, Compare>::type>
-class priority_queue : public if_<!fast_top, Empty, priority_queue_base<T>>::value {
+class priority_queue : public if_<fast_top, priority_queue_base<T>, Empty>::value {
 public:
   typedef Container                                 container_type;
   typedef typename Container::value_type            value_type;
@@ -71,14 +73,14 @@ public:
     : comp(cmp) {}
 
   template <bool enable=fast_top>
-  explicit priority_queue(const typename std::enable_if<!enable, Compare&>::type compare)
-    : priority_queue_base<T>(), c(compare), comp(compare) {}
+  explicit priority_queue(const typename std::enable_if<!enable, Compare&>::type cmp)
+    : c(cmp), comp(cmp) {}
 
   /**
    * @fn priority_queue::top
    * @return The element at the top (front) of the queue
    */
-  reference top() {
+  const_reference top() {
     return *c.begin();
   }
 
@@ -158,7 +160,8 @@ protected:
 
 private:
 
-  typename std::enable_if<fast_top, int>::type
+  template <bool enable=fast_top>
+  typename std::enable_if<enable, int>::type
   bubble_up(int index) {
     if (index == 0) return 0;         // at root
     int parent = parent_of(index);
@@ -168,7 +171,8 @@ private:
     } else return index;
   }
 
-  typename std::enable_if<fast_top, int>::type
+  template <bool enable=fast_top>
+  typename std::enable_if<enable, int>::type
   sink_down(int index) {
     int left = left_of(index);     // Index of left child
     int right = right_of(index);   // Index of right child
@@ -183,20 +187,24 @@ private:
     } else return index; // all done!
   }
 
-  typename std::enable_if<fast_top>::type
+  template <bool enable=fast_top>
+  typename std::enable_if<enable>::type
   inline swap(int index_a, int index_b) {
     std::swap(c[index_a], c[index_b]);
     this->indices[c[index_a]] = index_a;
     this->indices[c[index_b]] = index_b;
   }
 
-  typename std::enable_if<fast_top, int>::type
+  template <bool enable=fast_top>
+  typename std::enable_if<enable, int>::type
   inline left_of(int index) { return 2 * (index + 1) - 1; }
 
-  typename std::enable_if<fast_top, int>::type
+  template <bool enable=fast_top>
+  typename std::enable_if<enable, int>::type
   inline right_of(int index) { return 1 + left_of(index); }
 
-  typename std::enable_if<fast_top, int>::type
+  template <bool enable=fast_top>
+  typename std::enable_if<enable, int>::type
   inline parent_of(int index) { return (index + 1) / 2 - 1; }
 };
 
