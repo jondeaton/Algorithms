@@ -23,4 +23,4 @@ set(SRC
         include/priority-queue.hpp)
 
 add_executable(path-finder src/main.cpp ${SRC})
-add_executable(search-tester src/search-tester.cpp ${SRC})
+add_executable(pq-test src/pq-test.cpp ${SRC})

@@ -130,7 +130,7 @@ public:
   }
 
 private:
-  size_t data_size;
+  size_t data_size = 0;
   size_t* prevs;
   weight_type* distances;
   void setup_arrays(size_t new_size) {
