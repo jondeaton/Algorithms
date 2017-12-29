@@ -1,20 +1,16 @@
-/**
- * @file main.cpp
- * @brief Tests search algorithms
- */
+//
+// Created by Jonathan Deaton on 12/28/17.
+//
 
 #include "graph.hpp"
 #include "path.hpp"
 #include "path-finder.hpp"
 #include "coordinate.hpp"
 
-#include <vector>
-using namespace std;
+#include <fstream>
+#include <iostream>
 
-enum algorithm {
-  a_star,
-  dijkstra
-};
+using namespace std;
 
 template <class T, size_t I>
 static void get_coordinates(vector<Coordinate<T, I>> &coordinates, size_t N) {
@@ -72,45 +68,19 @@ private:
   Distance* distances;
 };
 
-void run_astar() {
-  typedef Graph<int, int> graph;
-  typedef Coordinate<int, 2> coordinate;
-  typedef DistanceToEnd<double, coordinate, DistanceBetween<int, 2>> distance_fn;
+void test_Astar() {
 
-  graph g;
-  cin >> g;
-
-  vector<coordinate> coordinates;
-  get_coordinates(coordinates, g.size());
-
-  size_t start, end;
-  cin >> start;
-  cin >> end;
-
-  // Find the path
-  distance_fn h(coordinates, end);
-  PathFinder<graph, distance_fn> path_finder(h);
-  auto path = path_finder.find_path(g, start, end);
-  cout << path << endl;
 }
 
-void run_dijkstra() {
-  typedef Graph<int, int> graph;
-  graph g;
-  cin >> g;
+void test_dijkstra() {
 
-  size_t start, end;
-  cin >> start;
-  cin >> end;
-
-  PathFinder<graph> path_finder;
-  auto path = path_finder.find_path(g, start, end);
-  cout << path << endl;
 }
 
-int main(int argc, char* argv[]) {
-  (void) argv;
-  algorithm alg = argc > 1 ? a_star : dijkstra;
-  if (alg == a_star) run_astar();
-  else run_dijkstra();
+int main() {
+  clock_t begin = clock();
+  test_dijkstra();
+  test_Astar();
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  cout << "Elapsed time: " << elapsed_secs << endl;
 }

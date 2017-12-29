@@ -89,21 +89,21 @@ public:
     queue.push(source);
 
     while (!queue.empty()) {
-      size_t v = *queue.top();
+      size_t v = queue.top();
       if (v == sink) return make_path(source, sink);
       queue.pop();
       for (Edge<WT> edge : graph[v]) {
         WT alt_distance = distances[v] + edge.weight;
 
         if (alt_distance < distances[edge.to]) { // found a faster way to get to this node
+          if (queue.contains(v)) queue.erase(v);
+
           prevs[edge.to] = v; // Mark the new predecessor
 
           distances[edge.to] = alt_distance;
           if constexpr (use_Astar) this->priorities[edge.to] = alt_distance + this->heuristic(edge.to);
 
-          auto it = queue.find(v);
-          if (it == queue.end()) queue.push(edge.to); // Add node for the first time
-          else queue.update_priority(it); // Update node priority to new value
+          queue.push(edge.to); // Add node for the first time
         }
       }
     }

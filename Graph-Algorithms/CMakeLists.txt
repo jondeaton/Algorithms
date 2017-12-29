@@ -20,7 +20,7 @@ set(SRC
         include/path.hpp
         include/coordinate.hpp
         include/path-finder.hpp src/path-finder.cpp
-        include/priority-queue.hpp
-        src/main.cpp)
+        include/priority-queue.hpp)
 
-add_executable(path-finder ${SRC})
+add_executable(path-finder src/main.cpp ${SRC})
+add_executable(search-tester src/search-tester.cpp ${SRC})
