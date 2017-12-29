@@ -14,6 +14,8 @@
 #ifndef _PRIORITY_QUEUE_INCLUDED_HPP
 #define _PRIORITY_QUEUE_INCLUDED_HPP
 
+
+#include "type-traits.hpp"
 #include <set>
 #include <vector>
 #include <map>
@@ -45,8 +47,14 @@ private:
   const Compare& comp;
 };
 
-#include <queue>
+template <class T>
+class priority_queue_base {
+protected:
+  std::map<T, int> indices;
+};
+
 /**
+ * @class priority_queue
  * @brief  A priority queue that supports removal and priority-updating
  * @tparam T  Type of element stored in the priority queue.
  * @tparam Container  The container to use to store the elements. Must support insert, find, end/begin, and erase
@@ -57,105 +65,139 @@ private:
  */
 template<
   class T,
-  bool fast_top=false,
+  bool fast_top=true,
   class Compare=typename std::less<T>,
   class Container=typename default_container<fast_top, T, Compare>::type>
-class priority_queue {
+class priority_queue : public if_<!fast_top, Empty, priority_queue_base<T>>::value {
 public:
-  typedef typename Container::value_type value_type;
-  typedef typename Container::pointer               pointer;
-  typedef typename Container::const_pointer         const_pointer;
+  typedef Container                                 container_type;
+  typedef typename Container::value_type            value_type;
   typedef typename Container::size_type             size_type;
-  typedef typename Container::difference_type       difference_type;
-  typedef typename Container::const_iterator        iterator;
+  typedef typename Container::reference             reference;
+  typedef typename Container::const_reference       const_reference;
+  typedef typename Container::iterator              iterator;
   typedef typename Container::const_iterator        const_iterator;
-  typedef std::reverse_iterator<iterator>           reverse_iterator;
-  typedef std::reverse_iterator<const_iterator>     const_reverse_iterator;
+
+  static constexpr bool ft = fast_top;
 
   priority_queue() = default;
 
   template <bool enable=fast_top>
-  explicit priority_queue(typename std::enable_if<enable, const Compare&>::type cmp) : comp(cmp) {}
+  explicit priority_queue(typename std::enable_if<enable, const Compare&>::type cmp)
+    : comp(cmp) {}
 
   template <bool enable=fast_top>
-  explicit priority_queue(typename std::enable_if<!enable, const Compare&>::type cmp) : c(cmp), comp(cmp) {}
+  explicit priority_queue(const typename std::enable_if<!enable, Compare&>::type compare)
+    : priority_queue_base<T>(), c(compare), comp(compare) {}
 
-  inline bool empty() { return c.empty(); }
-  inline size_t size() { return c.size(); }
-  iterator top() { return c.begin(); }
-
-  template <bool is_enabled = fast_top>
-  typename std::enable_if<fast_top>::type
-  push(const T& value) {
-    c.push_back(value);
-    bubble_up((int) size() - 1);
+  /**
+   * @fn priority_queue::top
+   * @return The element at the top (front) of the queue
+   */
+  iterator top() {
+    return c.begin();
   }
 
-  template <bool is_enabled = fast_top>
-  typename std::enable_if<is_enabled>::type
-  pop() {
-    c[0] = c.back();
-    c.pop_back();
-    sink_down(0);
+  /**
+   * @fn priority_queue::push
+   * @brief Add an element to the priority queue
+   * @param value The value to add to the priority queue.
+   */
+  void push(const T& value) {
+    if constexpr (fast_top) {
+      c.push_back(value);
+      bubble_up((int) size() - 1);
+
+    } else c.insert(value);
   }
 
-  template <bool is_enabled = fast_top>
-  typename std::enable_if<is_enabled, bool>::type
-  inline contains(const T& value) {
-    return indices.find(value) != indices.end();
+  /**
+   * @fn priority_queue::pop
+   * @brief remove the top element from the priority queue
+   */
+  void pop() {
+    if constexpr (fast_top) {
+      c[0] = c.back();
+      c.pop_back();
+      sink_down(0);
+
+    } else {
+      if (c.empty()) return;
+      c.erase(top());
+    }
   }
 
-  template <bool is_enabled = fast_top>
-  typename std::enable_if<is_enabled, bool>::type
-  remove(const T& value) {
-    if (indices.find(value) == indices.end()) return false;
+  /**
+   * @fn priority_queue
+   * @param value
+   * @return
+   */
+  void erase(iterator it) {
+    if constexpr (ft) {
+      T value = *it;
 
-    Compare comp_temp = comp;
-    comp = new CmpException<T, Compare>(value, comp);
+      Compare comp_temp = comp; // Store the
+      comp = new CmpException<T, Compare>(value, comp);
 
-    int index = indices[value];
-    bubble_up(index);
+      int index = this->indices[value];
+      bubble_up(index);
+      pop();
 
-    pop();
-    return true;
+      comp = comp_temp;
+    } else {
+      if (it != c.end()) c.erase(it);
+    }
   }
 
-  template <bool is_enabled = fast_top>
-  typename std::enable_if<is_enabled>::type
-  update_priority(const T& value) {
-    int index = indices[value];
-    bubble_up(sink_down(index));
+  /**
+   * @fn priority_queue::find
+   * @param value The value to find in the container
+   * @return An iterator to the element in the queue
+   */
+  iterator find(const T& value) {
+    if constexpr (fast_top) {
+      if (contains(value)) return c.begin() + this->indices[value];
+      return end();
+    } else return c.find(value);
   }
 
-  // Set implementation
-  template <bool is_enabled=fast_top>
-  typename std::enable_if<!is_enabled>::type
-  push(const T& value) {
-    c.insert(value);
+  /**
+   * @fn priority_queue::update_priority
+   * @details Simply removed and adds the
+   * @param it
+   */
+  void update_priority(iterator it) {
+    if constexpr (fast_top) {
+      int index = this->indices[*it];
+      bubble_up(sink_down(index));
+    } else {
+      erase(it);
+      push(*it);
+    }
   }
 
-  template <bool is_enabled=fast_top>
-  typename std::enable_if<!is_enabled>::type
-  pop() {
-    if (c.empty()) return;
-    c.erase(top());
+  /**
+   * @fn priority_queue::end
+   * @return An iterator to the end of the container
+   */
+  iterator end() {
+    return c.end();
   }
 
-  template <bool is_enabled=fast_top>
-  typename std::enable_if<!is_enabled, bool>::type
-  remove(const T& value) {
-    auto it = c.find(value);
-    if (it == c.end()) return false;
-    c.erase(it);
-    return true;
+  /**
+   * @fn priority_queue::empty
+   * @return True if the queue is empty, false otherwise
+   */
+  inline bool empty() {
+    return c.empty();
   }
 
-  template <bool is_enabled=fast_top>
-  typename std::enable_if<!is_enabled>::type
-  inline update_priority(const T& value, void (*update)()) {
-    remove(value);
-    update();
-    push(value);
+  /**
+   * @fn priority_queue::size
+   * @return The number of elements in the priority queue
+   */
+  inline size_t size() {
+    return c.size();
   }
 
 protected:
@@ -163,8 +205,11 @@ protected:
   Compare comp;
 
 private:
-  // Maps values to index within the min heap
-  typename std::enable_if<fast_top, std::map<T, int>>::type indices;
+
+  inline bool contains(const T& value) {
+    if constexpr (fast_top) return this->indices.find(value) != this->indices.end();
+    else return c.find(value) != c.end();
+  }
 
   typename std::enable_if<fast_top, int>::type
   bubble_up(int index) {
@@ -172,7 +217,7 @@ private:
     int parent = parent_of(index);
     if (comp(c[index], c[parent])) {
       std::swap(c[index], c[parent]);
-      indices[c[index]] = index;
+      this->indices[c[index]] = index;
       return bubble_up(parent);
     } else return index;
   }
@@ -185,11 +230,11 @@ private:
 
     if (comp(c[left], c[index]) && comp(c[left], c[right])) {
       std::swap(c[left], c[index]);
-      indices[c[index]] = index;
+      this->indices[c[index]] = index;
       return sink_down(left);
     } else if (comp(c[index], c[right]) && comp(c[right], c[left])) {
       std::swap(c[right], c[index]);
-      indices[c[index]] = index;
+      this->indices[c[index]] = index;
       return sink_down(right);
     } else return index; // all done!
   }

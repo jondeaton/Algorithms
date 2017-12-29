@@ -15,6 +15,7 @@ include_directories(include src)
 set(SRC
         include/graph.hpp src/graph.cpp
         include/node.hpp src/node.cpp
+        include/type-traits.hpp
         include/edge.hpp
         include/path.hpp
         include/coordinate.hpp

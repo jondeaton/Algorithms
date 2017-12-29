@@ -10,33 +10,41 @@
 #include "node.hpp"
 #include "path.hpp"
 #include "priority-queue.hpp"
+#include "type-traits.hpp"
 
 #include <set>
 #include <algorithm>
 #include <limits>
 #include <vector>
 
-template <bool, class if_true, class if_false>
-struct if_{};
 
-template <class if_true, class if_false>
-struct if_<true, if_true, if_false> {
-  typedef if_true value;
+template <class T>
+static inline void set_all(T* arr, T val, size_t count);
+
+/**
+ * @fn CompareDistances
+ * @brief Functor for comparing distances without re-computing
+ * @tparam WT
+ */
+template <class WT>
+struct ComparePriorities : public std::binary_function<size_t, size_t, bool> {
+public:
+  ComparePriorities() : priorities(nullptr) {}
+  explicit ComparePriorities(const WT* priorities) : priorities(priorities) {}
+  bool operator()(size_t a, size_t b) {
+    return priorities[a] > priorities[b];
+  }
+  WT* priorities;
 };
-
-template <class if_true, class if_false>
-struct if_<false, if_true, if_false> {
-  typedef if_false value;
-};
-
-class Empty {};
 
 template <class Graph, class Heuristic>
-class PathFinderDijkstra {
+class AstarPathFinderBase {
 public:
-  explicit PathFinderDijkstra(const Heuristic& heuristic) : distance_to_end(heuristic) {}
+  AstarPathFinderBase() = default;
+  explicit AstarPathFinderBase(const Heuristic& heuristic) : heuristic(heuristic) {}
+protected:
   typename Graph::weight_type* priorities;
-  Heuristic distance_to_end;
+  Heuristic heuristic;
 };
 
 /**
@@ -47,7 +55,7 @@ public:
  * @tparam Heuristic The type of function used to get a heuristic
  */
 template <class Graph, class Heuristic=void>
-class PathFinder : public if_<std::is_void<Heuristic>::value, Empty, PathFinderDijkstra<Graph, Heuristic>>::value {
+class PathFinder : public if_<std::is_void<Heuristic>::value, Empty, AstarPathFinderBase<Graph, Heuristic>>::value {
 public:
   typedef typename Graph::data_type T;
   typedef typename Graph::weight_type WT;
@@ -61,30 +69,88 @@ public:
 
   template <bool enable=use_Astar>
   explicit PathFinder(const typename std::enable_if<enable, Heuristic>::type& heuristic)
-    : PathFinderDijkstra<Graph, Heuristic>(heuristic) {
+    : AstarPathFinderBase<Graph, Heuristic>(heuristic) {
     prevs = (size_t*) malloc(data_size * sizeof(size_t));
     distances = (WT*) malloc(data_size * sizeof(WT));
     if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
+    data_size = 0;
   }
 
-  template <bool enable=use_Astar>
-  void set_heuristic(const typename std::enable_if<enable, Heuristic>::type& heuristic) {
-    this->distance_to_end = heuristic;
+  Path<size_t> find_path(Graph graph, size_t source, size_t sink) {
+
+    setup_arrays(graph.size());
+    distances[source] = 0;
+
+    ComparePriorities<WT> cmp;
+    if constexpr (use_Astar) cmp.priorities = this->priorities;
+    else cmp.priorities = distances; // in dijkstra's path distance *is* priority
+
+    priority_queue<size_t, true, ComparePriorities<WT>> queue(cmp);
+    queue.push(source);
+
+    while (!queue.empty()) {
+      size_t v = *queue.top();
+      if (v == sink) return make_path(source, sink);
+      queue.pop();
+      for (Edge<WT> edge : graph[v]) {
+        WT alt_distance = distances[v] + edge.weight;
+
+        if (alt_distance < distances[edge.to]) { // found a faster way to get to this node
+          prevs[edge.to] = v; // Mark the new predecessor
+
+          distances[edge.to] = alt_distance;
+          if constexpr (use_Astar) this->priorities[edge.to] = alt_distance + this->heuristic(edge.to);
+
+          auto it = queue.find(v);
+          if (it == queue.end()) queue.push(edge.to); // Add node for the first time
+          else queue.update_priority(it); // Update node priority to new value
+        }
+      }
+    }
+
+    Path<size_t> path;
+    return path; // return empty path - no path found
   }
 
-  Path<size_t> find_path(Graph graph, size_t source, size_t sink);
-  Path<size_t> make_path(size_t start, size_t end);
-  ~PathFinder();
+  Path<size_t> make_path(size_t start, size_t end) {
+    Path<size_t> path;
+    for (size_t v = end; v != start; v = prevs[v]) path.nodes.push_back(v);
+    path.nodes.push_back(start);
+    std::reverse(path.nodes.begin(), path.nodes.end());
+    return path;
+  }
+
+  ~PathFinder() {
+    free(prevs);
+    free(distances);
+    if constexpr (use_Astar) free(this->priorities);
+  }
 
 private:
   size_t data_size;
   size_t* prevs;
   WT* distances;
-  void setup_arrays(size_t new_size);
-  void initialize_arrays() {
-
+  void setup_arrays(size_t new_size) {
+    if (new_size <= data_size) return;
+    data_size = new_size;
+    prevs = (size_t*) realloc(prevs, data_size * sizeof(size_t));
+    distances = (WT*) realloc(distances, data_size * sizeof(WT));
+    if constexpr (use_Astar) this->priorities = (WT*) realloc(this->priorities, 1);
+    set_all(distances, std::numeric_limits<WT>::max(), data_size);
   }
 };
 
-#include <path-finder.cpp>
+/**
+ * @fn set_all
+ * @brief  Sets all of elements of an array to a specified value
+ * @tparam T  The type of element stored in the array
+ * @param arr  The array to set the values of
+ * @param val  The value to set all elements in the array to
+ * @param count  The number of elements to set in the array
+ */
+template <class T>
+static inline void set_all(T arr[], T val, size_t count) {
+  for (size_t i = 0; i < count; i++) arr[i] = val;
+}
+
 #endif // _PATH_FINDER_HPP_INCLUDED
