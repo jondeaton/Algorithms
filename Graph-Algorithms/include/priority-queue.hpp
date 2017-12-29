@@ -14,7 +14,7 @@
  * lookup the index of an element in the heap in sub-linear time (using a map). The other implementation relies
  * on the underlying container (default is std::set) to provide the priority queue operations. Despite the extra
  * book-keeping and memory overhead of the binary heap + map implementation, it still performs better
- * than the implementation utilizing std::set, which is why both implementations are present.
+ * than the implementation utilizing std::set in many cases, which is why both implementations are present.
  */
 
 #ifndef _PRIORITY_QUEUE_INCLUDED_HPP
