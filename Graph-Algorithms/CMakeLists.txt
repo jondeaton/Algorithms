@@ -3,12 +3,13 @@ cmake_minimum_required (VERSION 2.8)
 project (Graph-Algorithms)
 set (CMAKE_CXX_STANDARD 17)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    message("Mode: Release")
-    SET (CMAKE_CXX_FLAGS "-Ofast")
-else()
-    message("Mode: Debug")
+# cmake -DCMAKE_BUILD_TYPE=Debug ..
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Mode: Debug")
     SET(CMAKE_CXX_FLAGS "-g -O0 -Wall -Wextra -pedantic")
+else()
+    message(STATUS "Mode: Release")
+    SET (CMAKE_CXX_FLAGS "-Ofast")
 endif()
 
 include_directories(include src)
