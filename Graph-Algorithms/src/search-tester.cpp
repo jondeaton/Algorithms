@@ -2,13 +2,12 @@
 // Created by Jonathan Deaton on 12/28/17.
 //
 
+#include "path-finder.hpp"
 #include "graph.hpp"
 #include "path.hpp"
-#include "path-finder.hpp"
 #include "coordinate.hpp"
 
 #include <fstream>
-#include <iostream>
 
 using namespace std;
 

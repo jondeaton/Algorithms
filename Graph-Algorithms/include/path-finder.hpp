@@ -23,28 +23,28 @@ static inline void set_all(T* arr, T val, size_t count);
 
 /**
  * @fn CompareDistances
- * @brief Functor for comparing distances without re-computing
- * @tparam WT
+ * @brief Functor for comparing priorities for a priority queue
+ * @tparam priority: The type of the priorities that are compared
  */
-template <class WT>
+template <class priority>
 struct ComparePriorities : public std::binary_function<size_t, size_t, bool> {
 public:
   ComparePriorities() : priorities(nullptr) {}
-  explicit ComparePriorities(const WT* priorities) : priorities(priorities) {}
+  explicit ComparePriorities(const priority* priorities) : priorities(priorities) {}
   bool operator()(size_t a, size_t b) {
-    return priorities[a] > priorities[b];
+    return priorities[a] < priorities[b];
   }
-  WT* priorities;
+  priority* priorities;
 };
 
 template <class Graph, class Heuristic>
 class AstarPathFinderBase {
 public:
   AstarPathFinderBase() = default;
-  explicit AstarPathFinderBase(const Heuristic& heuristic) : heuristic(heuristic) {}
+  explicit AstarPathFinderBase(const Heuristic& heuristic) : heuristic(heuristic), priorities(nullptr) {}
 protected:
-  typename Graph::weight_type* priorities;
   Heuristic heuristic;
+  double* priorities = nullptr;
 };
 
 /**
@@ -57,23 +57,26 @@ protected:
 template <class Graph, class Heuristic=void>
 class PathFinder : public if_<std::is_void<Heuristic>::value, Empty, AstarPathFinderBase<Graph, Heuristic>>::value {
 public:
-  typedef typename Graph::data_type T;
-  typedef typename Graph::weight_type WT;
   static constexpr bool use_Astar = !std::is_void<Heuristic>::value;
+
+  typedef typename Graph::data_type value_type;
+  typedef typename Graph::weight_type weight_type;
+  typedef typename if_<use_Astar, double, weight_type>::value priority_type;
 
   explicit PathFinder(size_t data_size=0) : data_size(data_size) {
     prevs = (size_t*) malloc(data_size * sizeof(size_t));
-    distances = (WT*) malloc(data_size * sizeof(WT));
-    if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
+    distances = (weight_type*) malloc(data_size * sizeof(weight_type));
+    if constexpr (use_Astar) this->priorities = (weight_type*) malloc(data_size * sizeof(weight_type));
   }
 
   template <bool enable=use_Astar>
-  explicit PathFinder(const typename std::enable_if<enable, Heuristic>::type& heuristic)
+  explicit PathFinder(const typename std::enable_if<enable, Heuristic>::type& heuristic, size_t data_size=0)
     : AstarPathFinderBase<Graph, Heuristic>(heuristic) {
+    this->data_size = data_size;
     prevs = (size_t*) malloc(data_size * sizeof(size_t));
-    distances = (WT*) malloc(data_size * sizeof(WT));
-    if constexpr (use_Astar) this->priorities = (WT*) malloc(data_size * sizeof(WT));
-    data_size = 0;
+    distances = (weight_type*) malloc(data_size * sizeof(weight_type));
+    if constexpr (use_Astar)
+      this->priorities = (priority_type*) malloc(data_size * sizeof(priority_type));
   }
 
   Path<size_t> find_path(Graph graph, size_t source, size_t sink) {
@@ -81,29 +84,29 @@ public:
     setup_arrays(graph.size());
     distances[source] = 0;
 
-    ComparePriorities<WT> cmp;
+    ComparePriorities<priority_type> cmp;
     if constexpr (use_Astar) cmp.priorities = this->priorities;
     else cmp.priorities = distances; // in dijkstra's path distance *is* priority
 
-    priority_queue<size_t, true, ComparePriorities<WT>> queue(cmp);
+    priority_queue<size_t, true, ComparePriorities<priority_type>> queue(cmp);
     queue.push(source);
 
     while (!queue.empty()) {
       size_t v = queue.top();
       if (v == sink) return make_path(source, sink);
       queue.pop();
-      for (Edge<WT> edge : graph[v]) {
-        WT alt_distance = distances[v] + edge.weight;
+      for (Edge<weight_type> edge : graph[v]) {
+        weight_type alt_distance = distances[v] + edge.weight;
 
         if (alt_distance < distances[edge.to]) { // found a faster way to get to this node
-          if (queue.contains(v)) queue.erase(v);
+          if (queue.contains(edge.to)) queue.erase(edge.to); // need to remove in order to update it
 
           prevs[edge.to] = v; // Mark the new predecessor
 
           distances[edge.to] = alt_distance;
           if constexpr (use_Astar) this->priorities[edge.to] = alt_distance + this->heuristic(edge.to);
 
-          queue.push(edge.to); // Add node for the first time
+          queue.push(edge.to); // Queue the node for processing
         }
       }
     }
@@ -129,14 +132,15 @@ public:
 private:
   size_t data_size;
   size_t* prevs;
-  WT* distances;
+  weight_type* distances;
   void setup_arrays(size_t new_size) {
     if (new_size <= data_size) return;
     data_size = new_size;
     prevs = (size_t*) realloc(prevs, data_size * sizeof(size_t));
-    distances = (WT*) realloc(distances, data_size * sizeof(WT));
-    if constexpr (use_Astar) this->priorities = (WT*) realloc(this->priorities, 1);
-    set_all(distances, std::numeric_limits<WT>::max(), data_size);
+    distances = (weight_type*) realloc(distances, data_size * sizeof(weight_type));
+    if constexpr (use_Astar)
+      this->priorities = (priority_type*) realloc(this->priorities, data_size * sizeof(priority_type));
+    set_all(distances, std::numeric_limits<weight_type>::max(), data_size);
   }
 };
 

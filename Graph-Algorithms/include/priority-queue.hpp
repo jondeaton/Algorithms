@@ -33,8 +33,6 @@ struct default_container<true, T, Ts...> {
   typedef std::vector<T> type;
 };
 
-
-
 template <class T>
 class priority_queue_base {
 protected:
@@ -43,7 +41,7 @@ protected:
 
 /**
  * @class priority_queue
- * @brief  A priority queue that supports removal and priority-updating
+ * @brief  A priority queue that supports removal of elements for updating priorities
  * @tparam T  Type of element stored in the priority queue.
  * @tparam Container  The container to use to store the elements. Must support insert, find, end/begin, and erase
  * @tparam Compare  Comparison function object type, defaults to
@@ -113,19 +111,6 @@ public:
     }
   }
 
-  class CmpException : public Compare {
-  public:
-    CmpException(const T& t, const Compare& comp) : t(t), comp(comp) {};
-    bool operator() (const T& a, const T& b) const {
-      if (a == t) return true;
-      if (b == t) return false;
-      return comp(a, b);
-    }
-  private:
-    const T& t;
-    const Compare& comp;
-  };
-
   /**
    * @fn priority_queue
    * @param value
@@ -133,16 +118,11 @@ public:
    */
   void erase(const T& value) {
     if constexpr (fast_top) {
-      Compare comp_temp = comp; // Store the comparison
-
-      CmpException exception(value, comp);
-      comp = exception;
-
       int index = this->indices[value];
-      bubble_up(index);
-      pop();
-
-      comp = comp_temp;
+      swap(index, c.size() - 1);
+      c.pop_back();
+      this->indices.erase(value);
+      sink_down(index);
     } else c.erase(value);
   }
 
@@ -183,8 +163,7 @@ private:
     if (index == 0) return 0;         // at root
     int parent = parent_of(index);
     if (comp(c[index], c[parent])) {
-      std::swap(c[index], c[parent]);
-      this->indices[c[index]] = index;
+      swap(index, parent);
       return bubble_up(parent);
     } else return index;
   }
@@ -196,14 +175,19 @@ private:
     if (left >= (int) size()) return index;    // No children
 
     if (comp(c[left], c[index]) && comp(c[left], c[right])) {
-      std::swap(c[left], c[index]);
-      this->indices[c[index]] = index;
+      swap(left, index);
       return sink_down(left);
     } else if (comp(c[index], c[right]) && comp(c[right], c[left])) {
-      std::swap(c[right], c[index]);
-      this->indices[c[index]] = index;
+      swap(right, index);
       return sink_down(right);
     } else return index; // all done!
+  }
+
+  typename std::enable_if<fast_top>::type
+  inline swap(int index_a, int index_b) {
+    std::swap(c[index_a], c[index_b]);
+    this->indices[c[index_a]] = index_a;
+    this->indices[c[index_b]] = index_b;
   }
 
   typename std::enable_if<fast_top, int>::type

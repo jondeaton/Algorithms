@@ -8,6 +8,8 @@
 #include "path-finder.hpp"
 #include "coordinate.hpp"
 
+#include <iostream>
+#include <fstream>
 #include <vector>
 using namespace std;
 
@@ -42,7 +44,9 @@ struct DistanceBetween {
 template <class Distance, class Coordinate, class DistanceFn>
 class DistanceToEnd {
 public:
-  DistanceToEnd(const vector<Coordinate>& coordinates, size_t end_index) : end_index(end_index) {
+  DistanceToEnd(const vector<Coordinate>& coordinates, size_t end_index)
+    : end_index(end_index), coordinates(coordinates) {
+
     size_t numel = coordinates.size();
     set = (bool*) calloc(numel * sizeof(bool), 1);
     distances = (Distance*) malloc(numel * sizeof(Distance));
@@ -68,24 +72,27 @@ private:
 
   DistanceFn distanceFn;
 
-  const Coordinate* coordinates;
+  const vector<Coordinate> coordinates;
   Distance* distances;
 };
 
 void run_astar() {
+//  ifstream in("../test/d1");
+//  cin.rdbuf(in.rdbuf());
+
   typedef Graph<int, int> graph;
   typedef Coordinate<int, 2> coordinate;
   typedef DistanceToEnd<double, coordinate, DistanceBetween<int, 2>> distance_fn;
+
+  size_t start, end;
+  cin >> start;
+  cin >> end;
 
   graph g;
   cin >> g;
 
   vector<coordinate> coordinates;
   get_coordinates(coordinates, g.size());
-
-  size_t start, end;
-  cin >> start;
-  cin >> end;
 
   // Find the path
   distance_fn h(coordinates, end);
@@ -96,12 +103,13 @@ void run_astar() {
 
 void run_dijkstra() {
   typedef Graph<int, int> graph;
-  graph g;
-  cin >> g;
 
   size_t start, end;
   cin >> start;
   cin >> end;
+
+  graph g;
+  cin >> g;
 
   PathFinder<graph> path_finder;
   auto path = path_finder.find_path(g, start, end);
@@ -111,6 +119,7 @@ void run_dijkstra() {
 int main(int argc, char* argv[]) {
   (void) argv;
   algorithm alg = argc > 1 ? a_star : dijkstra;
+//  run_astar(); return 0;
   if (alg == a_star) run_astar();
   else run_dijkstra();
 }
