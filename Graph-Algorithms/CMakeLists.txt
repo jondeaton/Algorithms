@@ -20,7 +20,7 @@ set(SRC
         include/edge.hpp
         include/path.hpp
         include/coordinate.hpp
-        include/path-finder.hpp src/path-finder.cpp
+        include/path-finder.hpp
         include/priority-queue.hpp)
 
 add_executable(path-finder src/main.cpp ${SRC})

@@ -1,7 +1,6 @@
 /**
- * File: graph.tpp
- * ---------------
- *
+ * @file graph.tpp
+ * @breif presents the implementation of the graph
  */
 
 #ifndef _GRAPH_CPP_INCLUDED
