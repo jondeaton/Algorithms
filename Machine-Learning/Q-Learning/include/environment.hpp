@@ -11,14 +11,9 @@
 
 #include <vector>
 
-template <class State>
-class environment {
+class maze {
 public:
-
   const State& observe();
-
-protected:
-  std::vector<Stae> states;
 };
 
 

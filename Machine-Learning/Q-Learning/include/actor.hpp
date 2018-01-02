@@ -1,27 +1,38 @@
-//
-// Created by Jonathan Deaton on 12/31/17.
-//
+/**
+ * @file actor.hpp
+ */
 
 #ifndef Q_LEARNING_ACTOR_HPP
 #define Q_LEARNING_ACTOR_HPP
 
-#include <tuple>
+#include <type_traits>
 
-template <class State, class Action, size_t N, class Environment>
-class actor {
-public:
+template <
+  class State,
+  class Action,
+  std::size_t num_actions,
+  std::size_t num_states,
+  class Environment>
+class maze_actor {
+
   typedef typename Environment::reward_type reward_type;
+  typedef typename State state_type;
+  typedef typename Action action_type;
 
-  const Action* get_actions();
-  virtual const std::tuple<State, reward_type> take_action(const Action& action);
+  const reward_type& take_action(const Action& action) {
+
+  }
+
+  const state_type& current_state() {
+    return _states[current_state];
+  }
 
 private:
-  State _currentState;
-  Action _actions[N];
-};
+  size_t _current_state;
+  Action _actions[num_actions];
+  State _states[num_states];
 
-class maze_actor : actor {
-
+  Environment& _environment;
 };
 
 #endif //Q_LEARNING_ACTOR_HPP

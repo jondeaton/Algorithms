@@ -7,6 +7,7 @@ include_directories(include src)
 
 set (SRC
         include/actor.hpp
-        include/environment.hpp)
+        include/environment.hpp
+        include/learner.hpp)
 
 add_executable(Q_Learning ${SRC} main.cpp)
