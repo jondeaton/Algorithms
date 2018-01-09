@@ -11,10 +11,10 @@
 
 int main() {
 
-  maze env;
-  maze_actor< actor;
+  maze<10> env;
+  maze_actor actor;
 
-  learner<maze_actor, environment> l;
+  learner<maze_actor, maze> l(actor, env);
   l.learn();
 
   return 0;
