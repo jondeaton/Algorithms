@@ -13,7 +13,8 @@
 
 namespace maze {
 
-  enum direction {up, down, left, right};
+  enum direction {up, down, left, right, stay};
+
   class move {
   public:
     direction direction;
@@ -38,7 +39,7 @@ namespace maze {
   }
 
   template <std::size_t num_actions=4>
-  class actor {
+  class agent {
   public:
 
     static std::size_t num_actions = num_actions;
@@ -64,8 +65,7 @@ namespace maze {
     size_t _current_state;
     move _actions[num_actions];
     location _states[num_states];
-
-    const environment& _maze;
+    environment& _maze;
   };
 }
 

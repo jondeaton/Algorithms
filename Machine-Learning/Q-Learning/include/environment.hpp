@@ -30,25 +30,24 @@ namespace maze {
     return os;
   }
 
-  template <class Reward=double, std::size_t rows, std::size_t columns=rows>
+  template <std::size_t num_rows, std::size_t num_columns=num_rows, class Reward=double>
   class environment {
   public:
 
-    typedef typename Reward reward_type;
-    static size_t rows = rows;
-    static size_t columns = columns;
-    static size_t size = rows * columns;
+    typedef Reward reward_type;
+    static constexpr size_t rows = num_rows;
+    static constexpr size_t columns = num_columns;
+    static constexpr size_t size = num_rows * num_columns;
 
-    environment() {
+    environment() {}
 
-    }
-
-    location try_move(const location& from, environment::direction dir) {
+    location try_move(const location& from, maze::direction dir) {
       location new_location;
 
+      return new_location;
     }
 
-    bool free[rows][columns];
+    bool free[num_rows][num_columns];
 
     friend std::ostream& operator<<(std::ostream& os, const environment& maze);
   };

@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(include src)
 
 set (SRC
-        include/actor.hpp
+        include/agent.hpp
         include/environment.hpp
         include/learner.hpp
         include/maze.hpp)
