@@ -1,10 +1,15 @@
 /**
  * @file learner.hpp
  * @brief Q-Learning algorithm
+ * @details Q-learning is a model-free reinforcement learning algorithm. It does not construct a
+ * model of the state transition probabilities of the world. It does keep an explicit value function
+ * and policy function to make decisions.
  */
 
 #ifndef Q_LEARNING_LEARNER_HPP
 #define Q_LEARNING_LEARNER_HPP
+
+#include "maze.hpp"
 
 #include <map>
 #include <iostream>

@@ -41,7 +41,7 @@ namespace maze {
 
     environment() {}
 
-    location try_move(const location& from, maze::direction dir) {
+    location try_move(const location& from, direction dir) {
       location new_location;
 
       return new_location;

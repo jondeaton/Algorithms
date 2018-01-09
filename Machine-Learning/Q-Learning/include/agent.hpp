@@ -9,11 +9,10 @@
 
 #include <type_traits>
 #include <iostream>
-#include <tclDecls.h>
 
 namespace maze {
 
-  enum direction {up, down, left, right, stay};
+  typedef enum {up, down, left, right, stay} direction;
 
   class move {
   public:
@@ -34,6 +33,9 @@ namespace maze {
       case right:
         os << "move right";
         break;
+      case stay:
+        os << "stay";
+        break;
     }
     return os;
   }
@@ -42,8 +44,8 @@ namespace maze {
   class agent {
   public:
 
-    static std::size_t num_actions = num_actions;
-    static std::size_t num_states = num_states;
+    static constexpr std::size_t num_actions = num_actions;
+    static constexpr std::size_t num_states = num_states;
 
     typedef typename environment::reward_type reward_type;
     typedef typename location state_type;
