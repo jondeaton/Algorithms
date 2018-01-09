@@ -11,10 +11,12 @@
 
 int main() {
 
-  maze<10> env;
-  maze_actor actor;
+  typedef typename maze::environment<10> environment;
 
-  learner<maze_actor, maze> l(actor, env);
+  environment env;
+  maze::actor actor;
+
+  learner<maze::actor, environment> l(actor, env);
   l.learn();
 
   return 0;
