@@ -10,8 +10,20 @@ static inline void* pqueue_element(const CPQueue *pq, unsigned int i);
 static void pqueue_clear(CPQueue* pq);
 static inline void* pqueue_last(const CPQueue* pq);
 
+static inline int parent(int i) {
+  if (i == 0) return -1;
+  return i / 2;
+}
+static inline int left_of(int i) {
+  return 2 * i;
+}
+
+static inline int right_of(int i) {
+  return left_of(i + 1);
+}
+
   struct CPriorityQueueImplementation {
-  void* elements;
+  void* heap;
   unsigned int nelems;
   unsigned int capacity;
   size_t elemsz;
@@ -26,27 +38,27 @@ CPQueue* pqueue_create(size_t elemsz, unsigned int capacity_hint, CleanupElemFn 
   pq->cmp = cmp;
 
   pq->capacity = capacity_hint ? capacity_hint : DEFAULT_CAPACITY;
-  pq->elements = malloc(elemsz * pq->capacity);
+  pq->heap = malloc(elemsz * pq->capacity);
 
   return pq;
 }
 
 void pqueue_destroy(CPQueue* pq) {
   pqueue_clear(pq);
-  free(pq->elements);
+  free(pq->heap);
   free(pq);
 }
 
 void* pqueue_top(CPQueue* pq) {
-  if (pq->nelems) return pq->elements;
+  if (pq->nelems) return pq->heap;
   else return NULL;
 }
 
 void pqueue_pop(CPQueue* pq) {
   assert(pq->nelems);
-  memcpy(pq->elements, pqueue_last(pq), pq->elemsz);
+  memcpy(pq->heap, pqueue_last(pq), pq->elemsz);
   pq->nelems--;
-  push_down(pq->elements);
+  push_down(pq->heap);
 }
 
 
@@ -66,6 +78,6 @@ static void pqueue_clear(CPQueue* pq) {
 }
 
 static inline void* pqueue_element(const CPQueue *pq, unsigned int i) {
-  return (char*) pq->elements + i;
+  return (char*) pq->heap + i;
 }
 
