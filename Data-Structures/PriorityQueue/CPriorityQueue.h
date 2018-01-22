@@ -4,9 +4,9 @@
 #include <stdbool.h>
 
 typedef void (*CleanupElemFn)(void *addr);
-typedef bool (*Cmp)(void* a, void* b)
+typedef bool (*Cmp)(void* a, void* b);
 
-typedef struct CPriorityQueue CPriorityQueueImplementation;
+typedef struct CPriorityQueueImplementation CPQueue;
 
 
 #endif

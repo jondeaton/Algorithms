@@ -55,6 +55,8 @@ public:
 
     reward_type total_reward = 0;
     while (!_agent.is_done()) {
+      const observation_type& observation = _agent.observe();
+      const state_type& old_state =
       const state_type& old_state = _agent.current_state();
       const action_type& optimal_action = _find_optional_action(old_state);
 
@@ -81,6 +83,7 @@ private:
 
   std::map<state_type, int> state_map;
   std::map<action_type, int> action_map;
+  std::vector<std::tuple<state_type, action_type>> history;
 
   const action_type& _find_optional_action(const state_type& state) {
     quality_type max = std::min<quality_type>;
@@ -94,7 +97,6 @@ private:
     }
     return _agent.action_at(index);
   }
-
   quality_type update_Q(const state_type& new_state, const state_type& old_state, const action_type& action, const reward_type& reward) {
     int new_s = state_map[new_state];
     int a = action_map[action];

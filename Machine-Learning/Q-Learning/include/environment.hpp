@@ -9,7 +9,7 @@
 #ifndef Q_LEARNING_ENVIRONMENT_HPP
 #define Q_LEARNING_ENVIRONMENT_HPP
 
-#include "maze.hpp"
+#include "agent.hpp"
 
 #include <vector>
 #include <iostream>
@@ -41,7 +41,7 @@ namespace maze {
 
     environment() {}
 
-    location try_move(const location& from, direction dir) {
+    location try_move(const location& from, maze::direction direction) {
       location new_location;
 
       return new_location;
