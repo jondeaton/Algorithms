@@ -3,4 +3,4 @@ project(PriorityQueue C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_library(PriorityQueue CPriorityQueue.c CPriorityQueue.h)
+add_executable(test-pq test.c CPriorityQueue.h CPriorityQueue.c)

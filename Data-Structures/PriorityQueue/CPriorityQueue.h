@@ -8,5 +8,4 @@ typedef bool (*Cmp)(void* a, void* b);
 
 typedef struct CPriorityQueueImplementation CPQueue;
 
-
-#endif
+#endif // PRIORITYQUEUE_LIBRARY_H
