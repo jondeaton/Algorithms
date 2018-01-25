@@ -89,7 +89,6 @@ static void bubble_up(CPQueue* pq, unsigned int i) {
   unsigned int right = right_of(i);
 
 
-
 }
 
 static inline void swap(CPQueue* pq, unsigned int i, unsigned int j) {
