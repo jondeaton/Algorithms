@@ -38,6 +38,21 @@ int main() {
   }
   printHeap(heap);
 
+  for (int i = 0; i < 10000; i++) {
+    heap.insert(random());
+    heap.insert(random());
+    heap.pop();
+  }
+
+  int last = heap.peek();
+  while(heap.size()) {
+      if (heap.peek() < last)
+          cerr << "its fucked m8" << endl;
+      last = heap.peek();
+      heap.pop();
+  }
+
+
   // Search test
   heap.clear();
   heap.insert(100);
@@ -48,5 +63,12 @@ int main() {
   cout << "Heap contains 100? " << heap.contains(100) << endl;
   cout << "Heap contains 5? " << heap.contains(5) << endl;
   cout << "Heap contains 0? " << heap.contains(0) << endl;
+  
+  heap.clear();
+  for(int i =0; i < 100; i++) {
+      heap.insert(i);
+  }
+
+  printHeap(heap);
 }
 
