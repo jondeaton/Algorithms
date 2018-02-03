@@ -92,11 +92,12 @@ static void push_down(PriorityQueue *pq, int index) {
   int right = right_of(index);
 
   if (left >= pq->nelems) return; // has no children
+  bool has_right = right < pq->nelems;
 
-  if (cmp(pq, left, index) && cmp(pq, left, right)) {
+  if (cmp(pq, left, index) && has_right && cmp(pq, left, right)) {
     swap(pq, left, index);
     push_down(pq, left);
-  } else if (cmp(pq, right, index) && cmp(pq, right, left)) {
+  } else if (has_right && cmp(pq, right, index) && cmp(pq, right, left)) {
     swap(pq, right, index);
     push_down(pq, right);
   }

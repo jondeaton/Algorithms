@@ -7,7 +7,6 @@
 
 #include <vector>
 
-
 template <class T>
 int partition(std::vector<T> A, int p, int r) {
   // todo
