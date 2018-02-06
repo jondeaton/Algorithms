@@ -87,6 +87,20 @@ unsigned int pqueue_size(const PriorityQueue* pq) {
   return pq->nelems;
 }
 
+static void delete_element(PriorityQueue *pq, int index) {
+  if (index >= pq->nelems) return;
+  int left = left_of(index);
+  int right = right_of(index);
+
+  int swap_index;
+  if (right >= pq->nelems) swap_index = pq->nelems - 1;
+  else if (cmp(pq, left, right)) swap_index = left;
+  else swap_index = right;
+
+  swap(pq, index, swap_index);
+  delete_element(pq, swap_index);
+}
+
 static void push_down(PriorityQueue *pq, int index) {
   int left = left_of(index);
   int right = right_of(index);
