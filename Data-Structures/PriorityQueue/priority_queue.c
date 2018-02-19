@@ -18,8 +18,8 @@ static inline void swap(PriorityQueue *pq, int i, int j);
 static inline int parent_of(int index);
 static inline int left_of(int index);
 static inline int right_of(int index);
-static void push_down(PriorityQueue *pq, int index);
-static void bubble_up(PriorityQueue *pq, int index);
+static void swap_down(PriorityQueue *pq, int index);
+static void swap_up(PriorityQueue *pq, int index);
 static void double_size(PriorityQueue *pq);
 static inline bool cmp(const PriorityQueue* pq, int i, int j);
 
@@ -69,14 +69,14 @@ void pqueue_pop(PriorityQueue* pq) {
   if (pq->cleanup) pq->cleanup(pq->heap);
   memcpy(pq->heap, last_element(pq), pq->elemsz);
   pq->nelems--;
-  if (pq->nelems) push_down(pq, 0);
+  swap_down(pq, 0);
 }
 
 void pqueue_push(PriorityQueue *pq, const void *source) {
   if (pq->nelems == pq->capacity) double_size(pq);
   memcpy(heap_end(pq), source, pq->elemsz);
   pq->nelems++;
-  bubble_up(pq, pq->nelems - 1);
+  swap_up(pq, pq->nelems - 1);
 }
 
 bool pqueue_empty(const PriorityQueue *pq) {
@@ -88,20 +88,26 @@ unsigned int pqueue_size(const PriorityQueue* pq) {
 }
 
 static void delete_element(PriorityQueue *pq, int index) {
-  if (index >= pq->nelems) return;
+  if (index == pq->nelems - 1) {
+    pq->nelems--;
+    return;
+  }
   int left = left_of(index);
   int right = right_of(index);
 
   int swap_index;
-  if (right >= pq->nelems) swap_index = pq->nelems - 1;
-  else if (cmp(pq, left, right)) swap_index = left;
-  else swap_index = right;
+  if (right >= pq->nelems)
+    swap_index = pq->nelems - 1;
+  else if (cmp(pq, left, right))
+    swap_index = left;
+  else
+    swap_index = right;
 
   swap(pq, index, swap_index);
   delete_element(pq, swap_index);
 }
 
-static void push_down(PriorityQueue *pq, int index) {
+static void swap_down(PriorityQueue *pq, int index) {
   int left = left_of(index);
   int right = right_of(index);
 
@@ -110,19 +116,19 @@ static void push_down(PriorityQueue *pq, int index) {
 
   if (cmp(pq, left, index) && has_right && cmp(pq, left, right)) {
     swap(pq, left, index);
-    push_down(pq, left);
+    swap_down(pq, left);
   } else if (has_right && cmp(pq, right, index) && cmp(pq, right, left)) {
     swap(pq, right, index);
-    push_down(pq, right);
+    swap_down(pq, right);
   }
 }
 
-static void bubble_up(PriorityQueue *pq, int index) {
+static void swap_up(PriorityQueue *pq, int index) {
   if (index == 0) return;
   int parent = parent_of(index);
   if (cmp(pq, index, parent)) {
     swap(pq, parent, index);
-    bubble_up(pq, parent);
+    swap_up(pq, parent);
   }
 }
 

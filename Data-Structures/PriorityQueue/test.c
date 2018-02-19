@@ -2,22 +2,21 @@
 #include "priority_queue.h"
 #include <stdio.h>
 #include <assert.h>
-//#include <ranlib.h>
 
 #define SMALL 20
 #define BIG 10000
 
 #define FOR(N) for (int i = 0; i < N; ++i)
 
-bool cmp(const void* a, const void* b) {
+static bool cmp_int(const void *a, const void *b) {
   return *(int*)a < *(int*)b;
 }
 
-bool leq(const void* a, const void* b) {
+static bool leq(const void* a, const void* b) {
   return *(int*)a <= *(int*)b;
 }
 
-void assert_ordering(PriorityQueue* pq) {
+static void assert_ordering(PriorityQueue* pq) {
   int* last = pqueue_top(pq);
   while (!pqueue_empty(pq)){
     assert(leq(last, pqueue_top(pq)));
@@ -26,11 +25,11 @@ void assert_ordering(PriorityQueue* pq) {
   }
 }
 
-void assert_size(const PriorityQueue* pq, int expected) {
+static void assert_size(const PriorityQueue* pq, int expected) {
   assert(pqueue_size(pq) == expected);
 }
 
-void print_heap(PriorityQueue* pq) {
+static void print_heap(PriorityQueue* pq) {
   printf("heap: ");
   while (!pqueue_empty(pq)) {
     int el = *(int*) pqueue_top(pq);
@@ -41,7 +40,7 @@ void print_heap(PriorityQueue* pq) {
 }
 
 int main() {
-  PriorityQueue* pq = pqueue_create(sizeof(int), 0, cmp, NULL);
+  PriorityQueue* pq = pqueue_create(sizeof(int), 0, cmp_int, NULL);
 
   FOR(SMALL) pqueue_push(pq, &i);
 

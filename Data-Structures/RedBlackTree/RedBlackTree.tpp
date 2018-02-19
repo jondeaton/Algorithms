@@ -2,7 +2,7 @@
  * File: RedBlackTree.tpp
  * ----------------------
  * Presents the template implementation of the RedBlackTree data structure.
- *
+ *a
  * Red-Black Tree is a self-balancing Binary Search Tree (BST) where every node follows following rules.
  * 1) Every node has a color either red or black.
  */
@@ -235,11 +235,11 @@ Node<T> RedBlackTree<T>::remove(Node<T> node, const T& value) {
  */
 template <class T>
 Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
-  Node<T> sibiling = childOf(node, otherSide(side));
+  Node<T> sibling = childOf(node, otherSide(side));
 
-  // Red sibiling
-  if (sibiling->color == red) {
-    setColor(sibiling, black);
+  // Red sibling
+  if (sibling->color == red) {
+    setColor(sibling, black);
     setColor(node, red);
 
     Node<T> root = rotate(node, side);
@@ -256,12 +256,12 @@ Node<T> RedBlackTree<T>::fixDoubleBlack(Node<T> node, Side side) {
     return root;
   }
 
-  // Black sibiling
-  Side redChildSide = redChild(sibiling);
+  // Black sibling
+  Side redChildSide = redChild(sibling);
   if (redChildSide != none) {
     return rotateDoubleBlack(node, otherSide(side), redChildSide);
   } else {
-    setColor(sibiling, red);
+    setColor(sibling, red);
     updateHeight(node);
     setColor(node, black); // <-- just turned double black
     return node;
