@@ -8,7 +8,3 @@ Finally, this Neural Network implementation uses He initialization, optional L2 
 
 The implementation of the Neural Network is in `NeuralNetwork.py`
 
-Where noted, some of the code in this repository originates from Andrew Ng's Deep Learning course on Coursera.
-The implementation of the Deep Neural Network was NOT taken from the Coursera course, but implemented in isolation.
-
-
