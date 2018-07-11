@@ -5,12 +5,10 @@
 import math._
 
 def water(heights: Seq[Int]): Int = {
-	val leftHighest = heights.scanLeft(0)(max)
-	val rightHightest = heights.scanRight(0)(max)
-	heights.zip(leftHighest.zip(rightHightest)).map(t => {
-		val (h, (l, r)) = t
-		val w = min(l, r) - h
-		if (w > 0) w else 0
+	val leftMax = heights.scanLeft(0)(max)
+	val rightMax = heights.scanRight(0)(max)
+	(heights, leftMax, rightMax).zipped.map(t => {
+		val (h, l, r) = t
+    	max(0, min(l, r) - h)
 	}).sum
 }
-
