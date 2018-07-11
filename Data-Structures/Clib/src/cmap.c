@@ -21,7 +21,7 @@
  */
 struct CMapImplementation {
   void *buckets;            // Pointer to key-value pair array
-  uint64_t capacity;        // maximum number of values that can be stored
+  int capacity;        // maximum number of values that can be stored
   size_t value_size;        // The size of each user value
   int size;                 // The number of elements stored in the hash table
   CleanupValueFn cleanup;   // A callback function for cleaning up a value in the map.
@@ -82,7 +82,7 @@ static int hash(const char* s, int nbuckets) {
  * @param fn
  * @return
  */
-CMap *cmap_create(size_t value_size, size_t capacity,
+CMap *cmap_create(size_t value_size, int capacity,
                   CleanupValueFn fn, size_t key_size) {
     if (value_size <= 0) return NULL;     // Assert valid value size
 
@@ -110,39 +110,40 @@ CMap *cmap_create(size_t value_size, size_t capacity,
  * the value memory address stored in the node. 
  */
 void cmap_dispose(CMap* cm) {
+    cmap_clear(cm);
+    free(cm->buckets);
+    free(cm);
+}
+
+void cmap_clear(CMap *cm) {
     // Loop through and store all keys on the stack.
     const void* keys[cm->numvals];
+
+
     int i = 0;
-    for (const void* key = cmap_first(cm); key != NULL; key = cmap_next(cm, key))
-    {
+    for (const void* key = cmap_first(cm); key != NULL; key = cmap_next(cm, key)) {
         keys[i] = key;
         i++;
     }
-
     // Loop through keys freeing nodes and values
     void* node;
-    for (i = 0; i < cm->numvals; i++)
-    {
+    for (i = 0; i < cm->numvals; i++) {
         node = (char*) keys[i] - sizeof(void*);
         if (cm->cleanup != NULL)
             cm->cleanup(get_value_ptr(node, keys[i]));
         free(node);
     }
-
-    // Free the buckets
-    free(cm->buckets);
-    // Free the strcut
-    free(cm);
 }
 
-/* Function: cmap_count
- * -------------------
- * For getting how many key-value pairs are in your CMap. This function
- * simply returns the numvals field from the CMap struct.
+/**
+ * @brief For getting the number of elements in the table
  */
-int cmap_count(const CMap* cm)
-{
-    return cm->numvals;
+int cmap_count(const CMap* cm) {
+    return cm->size;
+}
+
+int cmap_capacity(const CMap* cm) {
+    return cm->capacity;
 }
 
 /* Function: cmap_put

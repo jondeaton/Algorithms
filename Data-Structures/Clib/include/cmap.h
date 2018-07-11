@@ -82,7 +82,7 @@ typedef struct CMapImplementation CMap;
  * Asserts: zero elemsz, allocation failure
  * Assumes: cleanup fn is valid
  */
-CMap *cmap_create(size_t value_size, size_t capacity_hint, CleanupValueFn fn, size_t key_size);
+CMap *cmap_create(size_t value_size, int capacity_hint, CleanupValueFn fn, size_t key_size);
 
 
 /**
@@ -164,6 +164,11 @@ void *cmap_get(const CMap *cm, const char *key);
  */
 void cmap_remove(CMap *cm, const char *key);
 
+/**
+ * Removes all elements from the hash table
+ * @param cm
+ */
+void cmap_clear(CMap *cm);
 
 /**
  * Functions: cmap_first, cmap_next
