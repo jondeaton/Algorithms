@@ -3,7 +3,6 @@
  * @brief Defines the implementation of a HashMap in C
  */
 
-
 #include "cmap.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,146 +20,140 @@
  */
 struct CMapImplementation {
   void *buckets;            // Pointer to key-value pair array
-  int capacity;        // maximum number of values that can be stored
-  size_t value_size;        // The size of each user value
+  int capacity;             // maximum number of values that can be stored
   int size;                 // The number of elements stored in the hash table
+
+  size_t value_size;        // The size of the value
+  size_t key_size;
+
   CleanupValueFn cleanup;   // A callback function for cleaning up a value in the map.
+  CMapHashFn hash;          // hash function callback
+  CMapCmpFn cmp;            // key comparison funciton
 };
 
 /**
  * @struct entry
+ * Stores metadata about a single key-value pair
  */
 struct entry {
   int origin;               // The origin
-  void *key;                // The key to insert
-  size_t key_size;          // The size of the key
-  void *value;              // The value stored for that key
+  int hash;                 // The hash of the key
+  uint8_t info;             //
+  char kv[];                // Key/Value pair
 };
 
-// Static function prototypes. These functions are used for decomposition
-// of the cmap functions and are not meant to be used outside of these definitions.
+bool is_free(const struct entry* e) {
+    return (bool) (e->info & 1);
+}
+
+// Static function prototypes
 static void* get_value_ptr(void* node, const char* key);
 static bool is_node_of(const void* node, const void* key);
 static void* get_bucket(const CMap* cm, const void* key);
 static void* get_node(const CMap* cm, const char* key);
 
-/* Function: hash
- * --------------
- * This function adapted from Eric Roberts' _The Art and Science of C_
- * It takes a string and uses it to derive a "hash code," which
- * is an integer in the range [0..nbuckets-1]. The hash code is computed
- * using a method called "linear congruence." A similar function using this
- * method is described on page 144 of Kernighan and Ritchie. The choice of
- * the value for the multiplier can have a significant effort on the
- * performance of the algorithm, but not on its correctness.
+/**
+ * @breif Default hash function
+ * @detail This function adapted from Eric Roberts' _The Art and Science of C_
+ * The hash code is computed using a method called "linear congruence."
+ * A similar function using this method is described on page 144 of Kernighan
+ * and Ritchie. The choice of the value for the multiplier can have a significant
+ * effort on the performance of the algorithm, but not on its correctness.
  * The computed hash value is stable, e.g. passing the same string and
  * nbuckets to function again will always return the same code.
- * The hash is case-sensitive, "ZELENSKI" and "Zelenski" are
- * not guaranteed to hash to same code.
  */
-static int hash(const char* s, int nbuckets) {
+static int default_hash(const void *key, size_t keysize) {
     const unsigned long MULTIPLIER = 2630849305L; // magic number
-
-    // Make a huge number that is completely different
-    // if even a single byte is changed in the input s.
     unsigned long hashcode = 0;
-    for (int i = 0; s[i] != '\0'; i++)
-        hashcode = hashcode * MULTIPLIER + s[i];
+    for (int i = 0; i < keysize; i++)
+        hashcode = hashcode * MULTIPLIER + ((const char*) key)[i];
+    return (int) hashcode;
+}
 
-    // Restrict hash to the range [0, nbucket - 1]
-    return hashcode % nbuckets;
+static int string_hash(const void *key, size_t keysize) {
+    size_t keylen = strlen((const char*) key);
+    return default_hash(key, keylen);
 }
 
 /**
- * cmap_create
- *
- * Instantiate a CMap struct in a dynamically allocated region of memory.
+ * @breif Instantiate a CMap struct in a dynamically allocated region of memory.
  * This function will also fill in the relevant elements of the CMap
- *
  * @param value_size
  * @param capacity
  * @param fn
  * @return
  */
-CMap *cmap_create(size_t value_size, int capacity,
-                  CleanupValueFn fn, size_t key_size) {
-    if (value_size <= 0) return NULL;     // Assert valid value size
+CMap *cmap_create(size_t key_size, size_t value_size,
+                  CMapHashFn hash, CMapCmpFn cmp, CleanupValueFn fn, int capacity) {
+    if (key_size <= 0 || value_size <= 0) return NULL;
 
     CMap* map = malloc(sizeof(CMap));
     if (map == NULL) return NULL;
 
-    map->buckets = malloc(capacity * sizeof(struct entry));
+    size_t entry_size = sizeof(struct entry) + value_size;
+    map->capacity = capacity > 0 ? capacity : DEFAULT_CAPACITY;
+    map->buckets = malloc(map->capacity * entry_size);
     if (map->buckets == NULL) return NULL;
 
-    map->capacity = capacity;
-    map->value_size = value_size;
     map->size = 0;
+
     map->cleanup = fn;
+    map->hash = hash == NULL ? default_hash : hash;
+    map->cmp = cmp == NULL ? memcmp : cmp;
 
     return map;
 }
 
-/* Function: cmap_dispose
- * ----------------------
- * This function disposes of a CMap and all it's contents. This
- * function gathers a list of keys through the use of cvec_first/cvec_next and stores
- * them in an array on the stack, then loops through the key array freeing and cleaning up
- * the nodes that each of the keys point to. If there is a provided callback function
- * for cleaning up elements, then this function will call that function on 
- * the value memory address stored in the node. 
- */
-void cmap_dispose(CMap* cm) {
-    cmap_clear(cm);
-    free(cm->buckets);
-    free(cm);
-}
-
-void cmap_clear(CMap *cm) {
-    // Loop through and store all keys on the stack.
-    const void* keys[cm->numvals];
-
-
-    int i = 0;
-    for (const void* key = cmap_first(cm); key != NULL; key = cmap_next(cm, key)) {
-        keys[i] = key;
-        i++;
-    }
-    // Loop through keys freeing nodes and values
-    void* node;
-    for (i = 0; i < cm->numvals; i++) {
-        node = (char*) keys[i] - sizeof(void*);
-        if (cm->cleanup != NULL)
-            cm->cleanup(get_value_ptr(node, keys[i]));
-        free(node);
-    }
-}
-
 /**
- * @brief For getting the number of elements in the table
+ * @brief Returns the number of key value pairs currently
+ * stored in the table
  */
 int cmap_count(const CMap* cm) {
     return cm->size;
 }
 
+/**
+ * @breif Returns the maximum capacity of the hash table
+ */
 int cmap_capacity(const CMap* cm) {
     return cm->capacity;
 }
 
-/* Function: cmap_put
- * ------------------
- * This function puts a new key-value pairs into the CMap struct. This
- * function will first hash the new key and examine the key-value pairs
- * linked to through the hashed bucket to determine if the key is already
- * in the map. The new key is compares against each of the existing keys
- * in the map using strcmp. If it finds the key already in the map,
- * it will simply cleanup the old value and copy the new value into it's 
- * place. If the key-value pair is not present  then a new node will
- * be allocated, and will be placed at the end of the linked list
- * for the bucket that the key hashes to.
+/**
+ * @breif Finds the entry for this key
+ * @param cm The CMap to lookup the key in
+ * @param key the key to lookup in the CMap
+ * @return
  */
-void cmap_put(CMap* cm, const char* key, const void* addr)
-{
+struct entry *lookup_key(const CMap *cm, const void *key) {
+    int hash = cm->hash(key, cm->key_size);
+    struct entry *e;
+    int offset = 0;
+    for () {
+        if (is_free(e)) return NULL;
+        
+    }
+}
+
+/**
+ * @breif Inserts a key-value pair into the hash table
+ * @param cm The CMap to insert a value into
+ * @param key The key to insert
+ * @param keysize The size of the key to insert
+ * @param value The value to insert
+ * @param valuesize The size of the value to insert
+ * @return Pointer to the inserted key, if successfully inserted, othersie NULL.
+ */
+void * cmap_insert(CMap *cm, const void *key, size_t keysize, const void *value,
+                   size_t valuesize) {
+
+    if (cm == NULL || key == NULL || value == NULL) return NULL;
+    if (keysize == 0 || valuesize == 0) return NULL;
+
+    struct entry *entry =
+
     void* bucket = get_bucket(cm, key);
+
 
     // Loop through linked list of nodes to see if the key
     // already exists in the map and replace if present.
@@ -177,7 +170,7 @@ void cmap_put(CMap* cm, const char* key, const void* addr)
             void* value_loc = get_value_ptr(next_node, key);
             if (cm->cleanup != NULL)
                 (*cm).cleanup(value_loc);
-            memcpy(value_loc, addr, cm->valsz);
+            memcpy(value_loc, value, cm->valsz);
             return;
         }
     }
@@ -201,7 +194,7 @@ void cmap_put(CMap* cm, const char* key, const void* addr)
 
     // Copy the element into the node
     void* value_dest = get_value_ptr(new_node, key);
-    memcpy(value_dest, addr,  cm->valsz);
+    memcpy(value_dest, value,  cm->valsz);
 
     cm->numvals++;
 }
@@ -264,6 +257,42 @@ void cmap_remove(CMap* cm, const char* key)
             // list, then this key isn't in the map, so return
             if (next_node == NULL) return;
         }
+    }
+}
+
+
+/* Function: cmap_dispose
+ * ----------------------
+ * This function disposes of a CMap and all it's contents. This
+ * function gathers a list of keys through the use of cvec_first/cvec_next and stores
+ * them in an array on the stack, then loops through the key array freeing and cleaning up
+ * the nodes that each of the keys point to. If there is a provided callback function
+ * for cleaning up elements, then this function will call that function on
+ * the value memory address stored in the node.
+ */
+void cmap_dispose(CMap* cm) {
+    cmap_clear(cm);
+    free(cm->buckets);
+    free(cm);
+}
+
+void cmap_clear(CMap *cm) {
+    // Loop through and store all keys on the stack.
+    const void* keys[cm->numvals];
+
+
+    int i = 0;
+    for (const void* key = cmap_first(cm); key != NULL; key = cmap_next(cm, key)) {
+        keys[i] = key;
+        i++;
+    }
+    // Loop through keys freeing nodes and values
+    void* node;
+    for (i = 0; i < cm->numvals; i++) {
+        node = (char*) keys[i] - sizeof(void*);
+        if (cm->cleanup != NULL)
+            cm->cleanup(get_value_ptr(node, keys[i]));
+        free(node);
     }
 }
 

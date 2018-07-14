@@ -8,22 +8,26 @@
 #define _cmap_h
 
 #include <stddef.h>
+#include <stdbool.h>
 
- /**
-  * Type: CleanupValueFn
-  * --------------------
-  * CleanupValueFn is the typename for a pointer to a client-supplied
-  * cleanup function. The client passes a cleanup function to cmap_create
-  * and the CMap will apply that function to a value that is being
-  * removed/replaced/disposed. The cleanup function takes one void* pointer
-  * that points to the value.
-  *
-  * The typedef allows the nickname "CleanupValueFn" to stand in for the
-  * longer declaration. CleanupValueFn can be used as the declared type
-  * for a variable, parameter, struct field, and so on.
-  */
+/**
+ * Type: CleanupValueFn
+ * --------------------
+ * CleanupValueFn is the typename for a pointer to a client-supplied
+ * cleanup function. The client passes a cleanup function to cmap_create
+ * and the CMap will apply that function to a value that is being
+ * removed/replaced/disposed. The cleanup function takes one void* pointer
+ * that points to the value.
+ *
+ * The typedef allows the nickname "CleanupValueFn" to stand in for the
+ * longer declaration. CleanupValueFn can be used as the declared type
+ * for a variable, parameter, struct field, and so on.
+ */
 typedef void (*CleanupValueFn)(void *addr);
 
+typedef int (CMapHashFn)(const void *key, size_t keysize);
+
+typedef int (CMapCmpFn)(const void *keyA, const void *keyB, size_t keysize);
 
 /**
  * Type: CMap
@@ -82,7 +86,8 @@ typedef struct CMapImplementation CMap;
  * Asserts: zero elemsz, allocation failure
  * Assumes: cleanup fn is valid
  */
-CMap *cmap_create(size_t value_size, int capacity_hint, CleanupValueFn fn, size_t key_size);
+CMap *cmap_create(size_t key_size, size_t value_size, CMapHashFn key_size, CMapCmpFn cmp, CleanupValueFn fn,
+                  int capacity_hint););
 
 
 /**
@@ -123,8 +128,8 @@ int cmap_count(const CMap *cm);
  *
  * Asserts: allocation failure
  * Assumes: key is valid, address of valid value
- */ 
-void cmap_put(CMap *cm, const char *key, const void *addr);
+ */
+void * cmap_insert(CMap *cm, const void *key, size_t keysize, const void *value, size_t valuesize);
 
 
 /**
