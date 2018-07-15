@@ -119,20 +119,38 @@ int cmap_capacity(const CMap* cm) {
     return cm->capacity;
 }
 
+
+static inline struct entry *get_entry(const CMap *cm, int index) {
+    if (cm == NULL || index < 0 || index >= cm->capacity) return NULL;
+    size_t bucket_size = (sizeof(struct entry) + cm->key_size + cm->value_size);
+    void *bucket = (char *) cm->buckets + index * bucket_size;
+    return (struct entry *) bucket;
+}
+
 /**
  * @breif Finds the entry for this key
  * @param cm The CMap to lookup the key in
  * @param key the key to lookup in the CMap
- * @return
+ * @return Pointer
  */
 struct entry *lookup_key(const CMap *cm, const void *key) {
     int hash = cm->hash(key, cm->key_size);
-    struct entry *e;
-    int offset = 0;
-    for () {
+    int start = hash % cm->capacity;
+
+    for (int i = start; i <= start; i = (i + 1) % cm->capacity) {
+        struct entry *e = get_entry(cm, i);
         if (is_free(e)) return NULL;
-        
+        if (e->hash != hash) continue;
+        if (cm->cmp(e->kv, key, cm->key_size) == 0)
+            return e;
     }
+    return NULL; // Went all the way around
+}
+
+struct entry *find_free(const CMap *cm, const void *key) {
+    if (cm == NULL || key == NULL) return NULL;
+
+
 }
 
 /**
@@ -150,62 +168,33 @@ void * cmap_insert(CMap *cm, const void *key, size_t keysize, const void *value,
     if (cm == NULL || key == NULL || value == NULL) return NULL;
     if (keysize == 0 || valuesize == 0) return NULL;
 
-    struct entry *entry =
+    int hash = cm->hash(key, cm->key_size);
+    int start = hash % cm->capacity;
 
-    void* bucket = get_bucket(cm, key);
-
-
-    // Loop through linked list of nodes to see if the key
-    // already exists in the map and replace if present.
-    void* next_node = bucket;
-    while (*(void**) next_node != NULL)
-    {
-        next_node = *(void**) next_node;
-
-        // Check to see if this next node actually contains the key already
-        if (is_node_of(next_node, key))
-        {
-            // If this key is already in the map, then cleanup
-            // the old value and replace it with the new one
-            void* value_loc = get_value_ptr(next_node, key);
-            if (cm->cleanup != NULL)
-                (*cm).cleanup(value_loc);
-            memcpy(value_loc, value, cm->valsz);
-            return;
-        }
+    int i = start;
+    while (true) {
+        struct entry *e = get_entry(cm, i);
+        if (e == NULL) return NULL;
+        if (is_free(e)) break;
+        i = (i + 1) % cm->capacity;
+        if (i == start) return NULL;    // Came back around to the beginning
     }
 
-    // Key wasn't already present so allocate space for a new node and put
-    // it at the end of the linked list.
-    size_t node_size = sizeof(void*) + strlen(key) + 1 + cm->valsz;
-    void* new_node = malloc(node_size);
+    memcpy();
 
-    // Assert node allocation success
-    assert(new_node != NULL);
+    cm->size++;
 
-    // Set the beginning of the node to not point to any next node
-    *(void**) new_node = NULL;
 
-    // Set the last node (or bucket) to point to the beginning of this new node
-    *(void**) next_node = new_node;
-
-    // Copy the key into the node
-    strcpy((char*) new_node + sizeof(void*), key);
-
-    // Copy the element into the node
-    void* value_dest = get_value_ptr(new_node, key);
-    memcpy(value_dest, value,  cm->valsz);
-
-    cm->numvals++;
 }
 
-/* Function: cmap_get
- * ------------------
- *  This function gets the a pointer to the value that is associated with 
- *  the key. It does do by hashing the key and then looping through the linked
- *  list of nodes using strcmp to confirm that a given node contains the key.
+/**
+ * @breif looks up a key-value pair in in the hash table
+ * @param cm The hash map to lookup the value in
+ * @param key The key to lookup
+ * @return Pointer to the value stored in the hash table. If there
+ * is no such key in the hash table then NULL.
  */
-void* cmap_get(const CMap* cm, const char* key)
+void* cmap_lookup(const CMap *cm, const void *key)
 {
     void* node = get_node(cm, key);
     return node == NULL ? NULL : get_value_ptr(node, key);

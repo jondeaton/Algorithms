@@ -148,7 +148,7 @@ void * cmap_insert(CMap *cm, const void *key, size_t keysize, const void *value,
  *
  * Assumes: key is valid
  */
-void *cmap_get(const CMap *cm, const char *key);
+void *cmap_lookup(const CMap *cm, const void *key);
 
 
 /**
