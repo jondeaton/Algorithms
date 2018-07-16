@@ -72,6 +72,6 @@ bool pqueue_empty(const PriorityQueue *pq);
  * @param pq A pointer to a priority queue
  * @return The number of elements in the queue
  */
-unsigned int pqueue_size(const PriorityQueue* pq);
+int pqueue_size(const PriorityQueue *pq);
 
 #endif // PRIORITYQUEUE_LIBRARY_H

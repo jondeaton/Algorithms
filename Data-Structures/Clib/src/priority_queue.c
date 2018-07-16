@@ -25,8 +25,8 @@ static inline bool cmp(const PriorityQueue* pq, int i, int j);
 
 struct PriorityQueueImplementation {
   void* heap;
-  unsigned int nelems;
-  unsigned int capacity;
+  int nelems;
+  int capacity;
   size_t elemsz;
   CleanupElemFn cleanup;
   Cmp cmp;
@@ -34,7 +34,7 @@ struct PriorityQueueImplementation {
 
 PriorityQueue *pqueue_create(size_t elemsz, unsigned int capacity_hint, Cmp cmp, CleanupElemFn cleanup) {
   PriorityQueue* pq = malloc(sizeof(struct PriorityQueueImplementation));
-  if (!pq) {
+  if (pq == NULL) {
     perror(__func__);
     exit(EXIT_FAILURE);
   }
@@ -45,7 +45,7 @@ PriorityQueue *pqueue_create(size_t elemsz, unsigned int capacity_hint, Cmp cmp,
 
   pq->capacity = capacity_hint ? capacity_hint : DEFAULT_CAPACITY;
   pq->heap = malloc(elemsz * pq->capacity);
-  if (!pq->heap) {
+  if (pq->heap == NULL) {
     perror(__func__);
     exit(EXIT_FAILURE);
   }
@@ -83,28 +83,8 @@ bool pqueue_empty(const PriorityQueue *pq) {
   return pq->nelems == 0;
 }
 
-unsigned int pqueue_size(const PriorityQueue* pq) {
+int pqueue_size(const PriorityQueue *pq) {
   return pq->nelems;
-}
-
-static void delete_element(PriorityQueue *pq, int index) {
-  if (index == pq->nelems - 1) {
-    pq->nelems--;
-    return;
-  }
-  int left = left_of(index);
-  int right = right_of(index);
-
-  int swap_index;
-  if (right >= pq->nelems)
-    swap_index = pq->nelems - 1;
-  else if (cmp(pq, left, right))
-    swap_index = left;
-  else
-    swap_index = right;
-
-  swap(pq, index, swap_index);
-  delete_element(pq, swap_index);
 }
 
 static void swap_down(PriorityQueue *pq, int index) {

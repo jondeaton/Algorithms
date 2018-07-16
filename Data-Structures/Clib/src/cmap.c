@@ -19,15 +19,16 @@
  * @brief Definition of HashTable implementation
  */
 struct CMapImplementation {
-  void *buckets;            // Pointer to key-value pair array
+  void *entries;            // Pointer to key-value pair array
+  void *end;                // End of buckets array
   int capacity;             // maximum number of values that can be stored
   int size;                 // The number of elements stored in the hash table
 
-  size_t value_size;        // The size of the value
-  size_t key_size;
+  size_t key_size;          // The size of each key
+  size_t value_size;        // The size of each value
 
   CleanupValueFn cleanup;   // A callback function for cleaning up a value in the map.
-  CMapHashFn hash;          // hash function callback
+  CMapHashFn hash;        // hash function callback
   CMapCmpFn cmp;            // key comparison funciton
 };
 
@@ -38,19 +39,24 @@ struct CMapImplementation {
 struct entry {
   int origin;               // The origin
   int hash;                 // The hash of the key
-  uint8_t info;             //
+  uint8_t status;             //
   char kv[];                // Key/Value pair
 };
 
-bool is_free(const struct entry* e) {
-    return (bool) (e->info & 1);
+#define FREE_MASK ((uint8_t) 1)
+
+static inline bool is_free(const struct entry* e) {
+  return (bool) (e->status & FREE_MASK);
 }
 
-// Static function prototypes
-static void* get_value_ptr(void* node, const char* key);
-static bool is_node_of(const void* node, const void* key);
-static void* get_bucket(const CMap* cm, const void* key);
-static void* get_node(const CMap* cm, const char* key);
+static inline void set_free(struct entry *e, bool free) {
+  if (free) e->status |= FREE_MASK;
+  else e->status &= ~FREE_MASK;
+}
+
+// static function declarations
+static inline size_t entry_size(const CMap *cm);
+static inline struct entry *get_entry(const CMap *cm, int index);
 
 /**
  * @breif Default hash function
@@ -63,17 +69,13 @@ static void* get_node(const CMap* cm, const char* key);
  * nbuckets to function again will always return the same code.
  */
 static int default_hash(const void *key, size_t keysize) {
-    const unsigned long MULTIPLIER = 2630849305L; // magic number
-    unsigned long hashcode = 0;
-    for (int i = 0; i < keysize; i++)
-        hashcode = hashcode * MULTIPLIER + ((const char*) key)[i];
-    return (int) hashcode;
+  const unsigned long MULTIPLIER = 2630849305L; // magic number
+  unsigned long hashcode = 0;
+  for (int i = 0; i < (int) keysize; i++)
+    hashcode = hashcode * MULTIPLIER + ((const char*) key)[i];
+  return (int) hashcode;
 }
 
-static int string_hash(const void *key, size_t keysize) {
-    size_t keylen = strlen((const char*) key);
-    return default_hash(key, keylen);
-}
 
 /**
  * @breif Instantiate a CMap struct in a dynamically allocated region of memory.
@@ -85,23 +87,28 @@ static int string_hash(const void *key, size_t keysize) {
  */
 CMap *cmap_create(size_t key_size, size_t value_size,
                   CMapHashFn hash, CMapCmpFn cmp, CleanupValueFn fn, int capacity) {
-    if (key_size <= 0 || value_size <= 0) return NULL;
+  if (key_size <= 0 || value_size <= 0) return NULL;
 
-    CMap* map = malloc(sizeof(CMap));
-    if (map == NULL) return NULL;
+  CMap* map = malloc(sizeof(CMap));
+  if (map == NULL) return NULL;
 
-    size_t entry_size = sizeof(struct entry) + value_size;
-    map->capacity = capacity > 0 ? capacity : DEFAULT_CAPACITY;
-    map->buckets = malloc(map->capacity * entry_size);
-    if (map->buckets == NULL) return NULL;
+  size_t entry_size = sizeof(struct entry) + value_size;
+  map->capacity = capacity > 0 ? capacity : DEFAULT_CAPACITY;
+  map->entries = malloc(map->capacity * entry_size);
+  if (map->entries == NULL) return NULL;
 
-    map->size = 0;
+  map->size = 0;
 
-    map->cleanup = fn;
-    map->hash = hash == NULL ? default_hash : hash;
-    map->cmp = cmp == NULL ? memcmp : cmp;
+  for (int i = 0; i < map->capacity; ++i) {
+    struct entry *e = get_entry(map, i);
+    set_free(e, true);
+  }
 
-    return map;
+  map->cleanup = fn;
+  map->hash = hash == NULL ? default_hash : hash;
+  map->cmp = cmp == NULL ? memcmp : cmp;
+
+  return map;
 }
 
 /**
@@ -109,22 +116,29 @@ CMap *cmap_create(size_t key_size, size_t value_size,
  * stored in the table
  */
 int cmap_count(const CMap* cm) {
-    return cm->size;
+  return cm->size;
 }
 
 /**
  * @breif Returns the maximum capacity of the hash table
  */
 int cmap_capacity(const CMap* cm) {
-    return cm->capacity;
+  return cm->capacity;
 }
 
+/**
+ * @breif Gets the size of each entry in the Hash Table
+ * @param cm
+ * @return
+ */
+static inline size_t entry_size(const CMap *cm) {
+  return sizeof(struct entry) + cm->key_size + cm->value_size;
+}
 
 static inline struct entry *get_entry(const CMap *cm, int index) {
-    if (cm == NULL || index < 0 || index >= cm->capacity) return NULL;
-    size_t bucket_size = (sizeof(struct entry) + cm->key_size + cm->value_size);
-    void *bucket = (char *) cm->buckets + index * bucket_size;
-    return (struct entry *) bucket;
+  if (cm == NULL || index < 0 || index >= cm->capacity) return NULL;
+  void *entry = (char *) cm->entries + index * entry_size(cm);
+  return (struct entry *) entry;
 }
 
 /**
@@ -133,24 +147,48 @@ static inline struct entry *get_entry(const CMap *cm, int index) {
  * @param key the key to lookup in the CMap
  * @return Pointer
  */
-struct entry *lookup_key(const CMap *cm, const void *key) {
-    int hash = cm->hash(key, cm->key_size);
-    int start = hash % cm->capacity;
+static struct entry *lookup_key(const CMap *cm, const void *key) {
+  int hash = cm->hash(key, cm->key_size);
+  int start = hash % cm->capacity;
 
-    for (int i = start; i <= start; i = (i + 1) % cm->capacity) {
-        struct entry *e = get_entry(cm, i);
-        if (is_free(e)) return NULL;
-        if (e->hash != hash) continue;
-        if (cm->cmp(e->kv, key, cm->key_size) == 0)
-            return e;
-    }
-    return NULL; // Went all the way around
+  for (int i = 0; i < cm->capacity; ++i) {
+    struct entry *e = get_entry(cm, (start + i) % cm->capacity);
+    if (e == NULL || is_free(e)) return NULL;
+
+    // Use cached hash value to do an easy/cache-friendly comparison
+    if (e->hash != hash) continue;
+
+    // Only dereference to compare full keys if you have to
+    if (cm->cmp(&e->kv, key, cm->key_size) == 0)
+      return e;
+  }
+  return NULL; // Went all the way around
 }
 
-struct entry *find_free(const CMap *cm, const void *key) {
-    if (cm == NULL || key == NULL) return NULL;
+static struct entry *find_free(const CMap *cm, const void *key) {
+  if (cm == NULL || key == NULL) return NULL;
 
+  int hash = cm->hash(key, cm->key_size);
+  int start = hash % cm->capacity;
 
+  // There is no vacancy
+  if (cm->size == cm->capacity)
+    return NULL;
+
+  for (int i = 0; i < cm->capacity; ++i) {
+    struct entry *e = get_entry(cm, (start + i) % cm->capacity);
+    if (e == NULL) return NULL;
+    if (is_free(e)) return e;
+  }
+  return NULL; // Went all the way around (should never happen)
+}
+
+static inline void *value_of(const CMap *cm, const struct entry *entry) {
+  return (char *) &entry->kv + cm->key_size;
+}
+
+static inline void *key_of(const struct entry *entry) {
+  return (void *) (&entry->kv);
 }
 
 /**
@@ -162,29 +200,18 @@ struct entry *find_free(const CMap *cm, const void *key) {
  * @param valuesize The size of the value to insert
  * @return Pointer to the inserted key, if successfully inserted, othersie NULL.
  */
-void * cmap_insert(CMap *cm, const void *key, size_t keysize, const void *value,
-                   size_t valuesize) {
+void *cmap_insert(CMap *cm, const void *key, const void *value) {
 
-    if (cm == NULL || key == NULL || value == NULL) return NULL;
-    if (keysize == 0 || valuesize == 0) return NULL;
+  if (cm == NULL || key == NULL || value == NULL) return NULL;
 
-    int hash = cm->hash(key, cm->key_size);
-    int start = hash % cm->capacity;
+  struct entry *entry = find_free(cm, key);
+  if (entry == NULL) return NULL;
 
-    int i = start;
-    while (true) {
-        struct entry *e = get_entry(cm, i);
-        if (e == NULL) return NULL;
-        if (is_free(e)) break;
-        i = (i + 1) % cm->capacity;
-        if (i == start) return NULL;    // Came back around to the beginning
-    }
+  memcpy(&entry->kv, key, cm->key_size);
+  memcpy(value_of(cm, entry), value, cm->value_size);
 
-    memcpy();
-
-    cm->size++;
-
-
+  cm->size++;
+  return entry;
 }
 
 /**
@@ -194,243 +221,124 @@ void * cmap_insert(CMap *cm, const void *key, size_t keysize, const void *value,
  * @return Pointer to the value stored in the hash table. If there
  * is no such key in the hash table then NULL.
  */
-void* cmap_lookup(const CMap *cm, const void *key)
-{
-    void* node = get_node(cm, key);
-    return node == NULL ? NULL : get_value_ptr(node, key);
+void *cmap_lookup(const CMap *cm, const void *key) {
+  if (cm == NULL || key == NULL) return NULL;
+  struct entry *entry = lookup_key(cm, key);
+  if (entry == NULL) return NULL;
+  return value_of(cm, entry);
 }
 
-/* Function: cmap_remove
- * ---------------------
- * This function removes a key value pair from the map. Thsi function
- * will do nothing if a key is provided that is not in the map. This function
- * hashes the key to get the bucket for the key, and then follows the linked list
- * of nodes. When the key is located (using strcmp) then the node is free'd and the 
- * value is cleaned up is necessary. The previosu node (or bucket) is then set to point 
- * to the next node (or null if no next node is present).
- */
-void cmap_remove(CMap* cm, const char* key)
-{
-    // Get the bucket corresponding to this key
-    void* bucket = get_bucket(cm, key);
-    // If the bucket is empty, then the key isn't in the map
-    if (*(void**) bucket == NULL) return;
+static inline void move(CMap *cm, struct entry *entry1, struct entry *entry2) {
+  memcpy(entry1, entry2, entry_size(cm));
+}
 
-    // Iterate through the linked list of nodes pointed to by the
-    // bucket, keeping track of the last node visited
-    void* previous_node = bucket;
-    void* next_node = *(void**) bucket;
-    while (true)
-    {
-        // If this node is the one that contains the key
-        if (is_node_of(next_node, key))
-        {
-            // Make the previous node point to the next node
-            *(void**) previous_node = *(void**) next_node;
-            // Cleanup the value stored at this node (if needed)
-            if(cm->cleanup != NULL)
-                (*cm).cleanup(get_value_ptr(next_node, key));
-            // Free the space used for the node
-            free(next_node);
-            // Decrement number of key-value pairs
-            cm->numvals--;
-            return;
-        }
-        else
-        {
-            // This node didn't contain the key we were searching for
-            // so move onto the next node.
-            previous_node = next_node;
-            next_node = *(void**) next_node;
-            // If we've hit the last node in the linked
-            // list, then this key isn't in the map, so return
-            if (next_node == NULL) return;
-        }
+static void delete(CMap *cm, int start, int stop) {
+
+  // The entry to delete
+  struct entry *entry = get_entry(cm, start);
+
+  int j = start;
+  for (int i = 0; i < cm->capacity; ++i) {
+    j = (j + 1) % cm->capacity;
+    if (j == stop) return;
+
+    struct entry *next = get_entry(cm, j);
+    if (is_free(next)) return; // reached the end
+
+    // Found one that can replace
+    if (next->origin >= start) {
+      move(cm, entry, next);
+      set_free(next, true);
+      break;
     }
+  }
+  delete(cm, j, stop); // Tail recursion
 }
 
+static int lookup_index(const CMap *cm, const void *key) {
+  int hash = cm->hash(key, cm->key_size);
+  int start = hash % cm->capacity;
 
-/* Function: cmap_dispose
- * ----------------------
- * This function disposes of a CMap and all it's contents. This
- * function gathers a list of keys through the use of cvec_first/cvec_next and stores
- * them in an array on the stack, then loops through the key array freeing and cleaning up
- * the nodes that each of the keys point to. If there is a provided callback function
- * for cleaning up elements, then this function will call that function on
- * the value memory address stored in the node.
+  for (int i = 0; i < cm->capacity; ++i) {
+    struct entry *e = get_entry(cm, (start + i) % cm->capacity);
+    if (e == NULL || is_free(e)) return -1;
+
+    // Use cached hash value to do an easy/cache-friendly comparison
+    if (e->hash != hash) continue;
+
+    // Only dereference to compare full keys if you have to
+    if (cm->cmp(&e->kv, key, cm->key_size) == 0)
+      return (start + i) % cm->capacity;
+  }
+  return -1;
+}
+
+/**
+ * @breif Removes a key-value pair from the hash table
+ * @param cm Hash table to remove the key value pair from
+ * @param key The key to remove
  */
+void cmap_remove(CMap *cm, const void *key) {
+  if (cm == NULL || key == NULL) return;
+
+  int start = lookup_index(cm, key);
+  struct entry *e = get_entry(cm, start);
+  delete(cm, start, e->origin);
+}
+
 void cmap_dispose(CMap* cm) {
-    cmap_clear(cm);
-    free(cm->buckets);
-    free(cm);
+  cmap_clear(cm);
+  free(cm->entries);
+  free(cm);
 }
 
+/**
+ * @breif Removes all of the elements from the hash tabls
+ * @param cm The CMap to remove all the elements from
+ */
 void cmap_clear(CMap *cm) {
-    // Loop through and store all keys on the stack.
-    const void* keys[cm->numvals];
+  if (cm == NULL) return;
 
+  int num_cleared = 0;
+  for (int i = 0; i < cm->capacity; ++i) {
+    struct entry *e = get_entry(cm, i);
+    if (is_free(e)) continue;
 
-    int i = 0;
-    for (const void* key = cmap_first(cm); key != NULL; key = cmap_next(cm, key)) {
-        keys[i] = key;
-        i++;
-    }
-    // Loop through keys freeing nodes and values
-    void* node;
-    for (i = 0; i < cm->numvals; i++) {
-        node = (char*) keys[i] - sizeof(void*);
-        if (cm->cleanup != NULL)
-            cm->cleanup(get_value_ptr(node, keys[i]));
-        free(node);
-    }
+    cm->cleanup(value_of(cm, e));
+    set_free(e, true);
+    num_cleared++;
+
+    // If we've deleted them all, stop and save a bit of searching
+    if (num_cleared == cm->size) break;
+  }
+  cm->size = 0;
 }
 
-/* Function: cmap_first
- * --------------------
- * This function gets the first element of the CMap by looping through 
- * the buckets and returning a pointer to the key contains in the 
- * node pointed to by the first bucket that does not contain NULL. If all 
- * buckets contain NULL then there are no key-value pairs in the map,
- * this function will return NULL. 
- */
-const char* cmap_first(const CMap* cm)
-{
-    for (int i = 0; i < cm->nbuckets; i++)
-    {
-        void* bucket = (char*) cm->buckets + i * sizeof(void*);
 
-        // If bucket contains NULL, skip it
-        if (*(void**) bucket == NULL) continue;
-        else
-        {
-            // Dereference to get to the node
-            void* node = *(void**) bucket;
-            // Jump to the start of the key
-            return (char*) node + sizeof(void*);
-        }
-    }
-    // All buckets were NULL
-    return NULL;
+const void *cmap_first(const CMap *cm) {
+  if (cm == NULL) return NULL;
+  if (cm->size == 0) return NULL;
+
+  for (int i = 0; i < cm->capacity; ++i) {
+    struct entry *e = get_entry(cm, i);
+    if (!is_free(e)) return key_of(e);
+  }
+  return NULL;
 }
 
-/* Function: cmap_next
- * -------------------
- *  This function gets the next element after the first one. This function
- *  will first check to see if the pointer stored in 
- *
+/**
+ * @breif Gets a pointer to the next key
+ * @param cm The hash table
+ * @param prevkey The previous key
+ * @return pointer to the next key, if there is one.
  */
-const char* cmap_next(const CMap* cm, const char* prevkey)
-{
-    // Since we can expect the prevkey to have come from cmap_first
-    // then we can assume that the prevkey points to a key that is actually
-    // inside of a node, and therefore we can use pointer arithmetic
-    // to get a pointer to beginnign of the node.
-    void* node = (char*) prevkey - sizeof(void*);
+const void *cmap_next(const CMap *cm, const void *prevkey) {
+  if (cm == NULL || prevkey == NULL) return NULL;
 
-    // If the key is not in the map, then return NULL
-    if (node == NULL) return NULL;
-
-    // If the next node is pointed to by the pointer
-    // in the beginning of this node, then just return that pointer
-    if (*(void**) node != NULL)
-    {
-        void* next_node = *(void**) node;
-        return (char*) next_node + sizeof(void*);
-    }
-
-    // If this node was the last one in the linked list, then go back
-    // and iterate through the buckets. 
-    for (int i = hash(prevkey, cm->nbuckets) + 1; i < cm->nbuckets; i++)
-    {
-        // Get the next bucket
-        void* bucket = (char*) cm->buckets + i * sizeof(void*);
-        // If bucket contents are not NULL, return the key in the node
-        if (*(void**) bucket != NULL)
-        {
-            void* next_node = *(void**) bucket;
-            return (char*) next_node + sizeof(void*);
-        }
-    }
-    // Prevkey was the last key
-    return NULL;
-}
-
-/* Function: get_bucket
- * --------------------
- * This function is for getting a pointer to the bucket that the provided
- * key would be or is already stored in. This function works by hashing the key
- * to get the bucket index of the key, and then using pointer arithmetic to 
- * jump to the memory address of that bucket. This bucket may contain NULL
- * if the key is not already in the map and no other keys with the same hash 
- * are currently contained in the bucket.
- */
-static void* get_bucket(const CMap* cm, const void* key)
-{
-    return (char*) cm->buckets + hash(key, cm->nbuckets) * sizeof(void*);
-}
-
-/* Function: get_value_ptr
- * -----------------------
- * This function is for getting a pointer to the part of the node
- * that contains the value. This function will use pointer arithmetic
- * to jump ahead in memory past the pointer and key contained in the node. Since
- * the key is simply used to get the length of bytes of the key, the pointer to key
- * need not be pointing to the key that is actually stored inside of the node, but
- * it does need to have the correct length so that the correct memory address is calculated.
- *
- * Assumes: The key value stored in the node is the same as that pointed to by key
- */
-static void* get_value_ptr(void* node, const char* key)
-{
-    return (char*) node + sizeof(void*) + strlen(key) + 1;
-}
-
-/* Function: is_node_of
- * --------------------
- * This function returns a bool indicating that the node pointed to by the 
- * first argument contains the key pointed to by the second argument. This
- * is confirmed using strcmp to compare the two key strings. Since string
- * comparison is used, the key pointed to by the second argumet need not be actually
- * contained in the node pointed to the first argument. A true value returned means
- * that the node contains a string equal to that pointed to by key. 
- */
-static bool is_node_of(const void* node, const void* key)
-{
-    char* string_start = (char*) node + sizeof(void*);
-    return strcmp(string_start, key) == 0;
-}
-
-/* Function: get_node
- * ------------------
- * This function is for getting a pointer to the node that contains the key-value 
- * pair of the key pointed to by the second argument. This function will hash the key
- * and then follow the linked list pointed to by the key's bucket. Each node in the linked
- * list will be examined using is_node_of to see if it has the correct key. If a key match is 
- * found then a pointer to the beginning of the node will be returned. If no matching keys were found 
- * in the linked list of nodes, then NULL will be returned indicating that the key is not in the map.
- * Since this function uses strcmp to look for strings, the key pointed to by the second argument
- * need not be pointing to a key that is actually stored in the node, but only need to be equal 
- * by string comparison.
- */
-static void* get_node(const CMap* cm, const char* key)
-{
-    // Hash key to get the bucket
-    void* bucket = get_bucket(cm, key);
-
-    // Bucket contains no nodes so no key found -> return null
-    if (*(void**) bucket == NULL) return NULL;
-
-    // Start at the first
-    void* next_node = *(void**) bucket;
-    while (true)
-    {
-        // If string matches return this node
-        if (is_node_of(next_node, key)) return next_node;
-
-            // keys didin't match, and this is the last node in the list. No key found.
-        else if (*(void**) next_node == NULL) return NULL;
-
-        // Jump to next node
-        next_node = *(void**) next_node;
-    }
+  const struct entry *e = (struct entry *) ((char *) prevkey - offsetof(struct entry, kv));
+  while (e != cm->end) {
+    e = (struct entry *) ((char *) e + entry_size(cm));
+    if (!is_free(e)) return key_of(e);
+  }
+  return NULL;
 }
