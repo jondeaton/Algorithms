@@ -23,18 +23,18 @@ static int string_hash(const void *key, size_t keysize) {
 
 static int string_cmp(const void *a, const void *b, size_t keysize) {
   (void) keysize;
-  return strcmp((const char *) a, (const char *) b);
+  return strcmp(*(const char **) a, *(const char **) b);
 }
 
 int main (int argc, char* argv[]) {
   (void) argc;
   (void) argv;
   
-  CMap *map = cmap_create(sizeof(char*), sizeof(int),
+  CMap *map = cmap_create(sizeof(char *), sizeof(int),
                           string_hash, string_cmp, NULL, 0);
 
-  cmap_insert(map, "a", &(int){1});
-  cmap_insert(map, "b", &(int){2});
+  cmap_insert(map, &(char *){"a"}, &(int){1});
+  cmap_insert(map, &(char *){"b"}, &(int){2});
 
   assert(cmap_count(map) == 2);
 

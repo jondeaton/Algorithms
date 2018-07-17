@@ -153,7 +153,7 @@ static struct entry *lookup_key(const CMap *cm, const void *key) {
 
   for (int i = 0; i < cm->capacity; ++i) {
     struct entry *e = get_entry(cm, (start + i) % cm->capacity);
-    if (e == NULL || is_free(e)) return NULL;
+    if (e == NULL || is_free(e)) continue;
 
     // Use cached hash value to do an easy/cache-friendly comparison
     if (e->hash != hash) continue;
@@ -163,24 +163,6 @@ static struct entry *lookup_key(const CMap *cm, const void *key) {
       return e;
   }
   return NULL; // Went all the way around
-}
-
-static struct entry *find_free(const CMap *cm, const void *key) {
-  if (cm == NULL || key == NULL) return NULL;
-
-  int hash = cm->hash(key, cm->key_size);
-  int start = hash % cm->capacity;
-
-  // There is no vacancy
-  if (cm->size == cm->capacity)
-    return NULL;
-
-  for (int i = 0; i < cm->capacity; ++i) {
-    struct entry *e = get_entry(cm, (start + i) % cm->capacity);
-    if (e == NULL) return NULL;
-    if (is_free(e)) return e;
-  }
-  return NULL; // Went all the way around (should never happen)
 }
 
 static inline void *value_of(const CMap *cm, const struct entry *entry) {
@@ -201,14 +183,29 @@ static inline void *key_of(const struct entry *entry) {
  * @return Pointer to the inserted key, if successfully inserted, othersie NULL.
  */
 void *cmap_insert(CMap *cm, const void *key, const void *value) {
-
   if (cm == NULL || key == NULL || value == NULL) return NULL;
 
-  struct entry *entry = find_free(cm, key);
-  if (entry == NULL) return NULL;
+  // There is no vacancy
+  if (cm->size == cm->capacity)
+      return NULL;
 
-  memcpy(&entry->kv, key, cm->key_size);
+  int hash = cm->hash(key, cm->key_size);
+  int start = hash % cm->capacity;
+
+  struct entry *entry;
+  for (int i = 0; i < cm->capacity; ++i) {
+    entry = get_entry(cm, (start + i) % cm->capacity);
+    if (entry == NULL) return NULL; // error
+    if (is_free(entry)) break;
+  }
+
+  // Fill the entry with the key-value pair
+  memcpy(key_of(entry), key, cm->key_size);
   memcpy(value_of(cm, entry), value, cm->value_size);
+
+  set_free(entry, false);
+  entry->hash = hash;
+  entry->origin = start;
 
   cm->size++;
   return entry;
