@@ -12,7 +12,7 @@
 #include <assert.h>
 
 // a suggested value to use when given capacity_hint is 0
-#define DEFAULT_CAPACITY 1023
+#define DEFAULT_CAPACITY 1024
 
 /**
  * @struct CMapImplementation
@@ -89,26 +89,32 @@ CMap *cmap_create(size_t key_size, size_t value_size,
                   CMapHashFn hash, CMapCmpFn cmp, CleanupValueFn fn, int capacity) {
   if (key_size <= 0 || value_size <= 0) return NULL;
 
-  CMap* map = malloc(sizeof(CMap));
-  if (map == NULL) return NULL;
+  CMap* cm = malloc(sizeof(CMap));
+  if (cm == NULL) return NULL;
 
-  size_t entry_size = sizeof(struct entry) + value_size;
-  map->capacity = capacity > 0 ? capacity : DEFAULT_CAPACITY;
-  map->entries = malloc(map->capacity * entry_size);
-  if (map->entries == NULL) return NULL;
+  cm->key_size = key_size;
+  cm->value_size = value_size;
 
-  map->size = 0;
+  cm->capacity = capacity > 0 ? capacity : DEFAULT_CAPACITY;
+  cm->entries = malloc(cm->capacity * entry_size(cm));
+  if (cm->entries == NULL) {
+    free(cm); // wouldn't wanna leak memory while running out of it eh?
+    return NULL;
+  }
 
-  for (int i = 0; i < map->capacity; ++i) {
-    struct entry *e = get_entry(map, i);
+  cm->size = 0;
+
+  for (int i = 0; i < cm->capacity; ++i) {
+    struct entry *e = get_entry(cm, i);
+    assert(e != NULL);
     set_free(e, true);
   }
 
-  map->cleanup = fn;
-  map->hash = hash == NULL ? default_hash : hash;
-  map->cmp = cmp == NULL ? memcmp : cmp;
+  cm->cleanup = fn;
+  cm->hash = hash == NULL ? default_hash : hash;
+  cm->cmp = cmp == NULL ? memcmp : cmp;
 
-  return map;
+  return cm;
 }
 
 /**
@@ -136,7 +142,8 @@ static inline size_t entry_size(const CMap *cm) {
 }
 
 static inline struct entry *get_entry(const CMap *cm, int index) {
-  if (cm == NULL || index < 0 || index >= cm->capacity) return NULL;
+  assert(cm != NULL);
+  assert(index >= 0 && index < cm->capacity);
   void *entry = (char *) cm->entries + index * entry_size(cm);
   return (struct entry *) entry;
 }
@@ -195,7 +202,7 @@ void *cmap_insert(CMap *cm, const void *key, const void *value) {
   struct entry *entry;
   for (int i = 0; i < cm->capacity; ++i) {
     entry = get_entry(cm, (start + i) % cm->capacity);
-    if (entry == NULL) return NULL; // error
+    assert(entry != NULL);
     if (is_free(entry)) break;
   }
 

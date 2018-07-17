@@ -33,18 +33,24 @@ int main (int argc, char* argv[]) {
   CMap *map = cmap_create(sizeof(char *), sizeof(int),
                           string_hash, string_cmp, NULL, 0);
 
-  cmap_insert(map, &(char *){"a"}, &(int){1});
-  cmap_insert(map, &(char *){"b"}, &(int){2});
+  assert(map != NULL);
+  assert(cmap_count(map) == 0);
+
+  const char *a = "a";
+  const char *b = "b";
+
+  cmap_insert(map, &a, &(int){1});
+  cmap_insert(map, &b, &(int){2});
 
   assert(cmap_count(map) == 2);
 
-  const void *key = cmap_lookup(map, "a");
-  assert(strcmp(key, "a") == 0);
+  const void *key = cmap_lookup(map, &a);
+  assert(strcmp(*(const char**)key, a) == 0);
 
   cmap_clear(map);
   assert(cmap_count(map) == 0);
 
-  assert(cmap_lookup(map, "a") == NULL);
+  assert(cmap_lookup(map, &a) == NULL);
   cmap_dispose(map);
 
   return 0;
