@@ -87,7 +87,7 @@ static unsigned int default_hash(const void *key, size_t keysize) {
  * @return
  */
 CMap *cmap_create(size_t key_size, size_t value_size,
-                  CMapHashFn hash, CMapCmpFn cmp, 
+                  CMapHashFn hash, CMapCmpFn cmp,
                   CleanupFn cleanupKey, CleanupFn cleanupValue,
                   unsigned int capacity) {
   if (key_size <= 0 || value_size <= 0) return NULL;
@@ -197,7 +197,7 @@ void *cmap_insert(CMap *cm, const void *key, const void *value) {
 
   // There is no vacancy
   if (cm->size == cm->capacity)
-      return NULL;
+    return NULL;
 
   unsigned int hash = cm->hash(key, cm->key_size);
 
@@ -239,15 +239,15 @@ static inline void move(CMap *cm, struct entry *entry1, struct entry *entry2) {
 }
 
 static void erase(CMap *cm, struct entry *e) {
-    assert(cm != NULL);
-    assert(e != NULL);
+  assert(cm != NULL);
+  assert(e != NULL);
 
-    if (cm->cleanupKey != NULL)
-        cm->cleanupKey(key_of(e));
-    if (cm->cleanupValue != NULL)
-        cm->cleanupValue(value_of(cm, e));
-  
-    set_free(e, true);
+  if (cm->cleanupKey != NULL)
+    cm->cleanupKey(key_of(e));
+  if (cm->cleanupValue != NULL)
+    cm->cleanupValue(value_of(cm, e));
+
+  set_free(e, true);
 }
 
 static void delete(CMap *cm, unsigned int start, unsigned int stop) {
@@ -302,7 +302,7 @@ void cmap_remove(CMap *cm, const void *key) {
   if (start < 0) return;
   struct entry *e = get_entry(cm, start);
   assert(e != NULL);
-  
+
   erase(cm, e);
   delete(cm, start, e->origin);
   cm->size--;
