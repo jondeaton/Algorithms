@@ -4,29 +4,11 @@
 #include "assert.h"
 
 #include "cmap.h"
-#define UNUSED __attribute__ ((unused))
+#include "hash.h"
 
-static unsigned int default_hash(const void *key, size_t keysize) {
-  const unsigned long MULTIPLIER = 2630849305L; // magic number
-  unsigned long hashcode = 0;
-  for (int i = 0; i < (int) keysize; i++)
-    hashcode = hashcode * MULTIPLIER + ((const char*) key)[i];
-  return (unsigned int) hashcode;
-}
+#define unused __attribute__ ((unused))
 
-// example of a string hash function that could be used for strings
-static unsigned int string_hash(const void *key, size_t keysize) {
-  (void) keysize;
-  size_t keylen = strlen((const char*) key);
-  return default_hash(key, keylen);
-}
-
-static int string_cmp(const void *a, const void *b, size_t keysize) {
-  (void) keysize;
-  return strcmp(*(const char **) a, *(const char **) b);
-}
-
-int main (int argc UNUSED, char* argv[] UNUSED) {
+void functionality_test() {
   CMap *map = cmap_create(sizeof(char *), sizeof(int),
                           string_hash, string_cmp,
                           NULL, NULL, 0);
@@ -61,5 +43,9 @@ int main (int argc UNUSED, char* argv[] UNUSED) {
   assert(cmap_lookup(map, &a) == NULL);
   cmap_dispose(map);
 
+}
+
+int main (int argc unused, char* argv[] unused) {
+  functionality_test();
   return 0;
 }
