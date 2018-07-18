@@ -21,8 +21,13 @@ else()
     set(CMAKE_C_FLAGS  "-g -O0 -Wall -Wextra -pedantic")
 endif()
 
-include_directories(include src)
+include_directories(include src test)
 
-include_directories(test)
-add_executable(test-cmap test/cmap_test.c include/cmap.h src/cmap.c)
+set(HASHTABLE_SRC
+        include/murmur3.h       src/murmur3.c
+        include/cmap.h          src/cmap.c
+        include/hash.h          src/hash.c)
+
 add_executable(test-pq test/test.c include/priority_queue.h src/priority_queue.c)
+
+add_executable(test-cmap test/cmap_test.c ${HASHTABLE_SRC})
