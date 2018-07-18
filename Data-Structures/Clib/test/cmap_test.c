@@ -15,7 +15,7 @@ static int default_hash(const void *key, size_t keysize) {
 }
 
 // example of a string hash function that could be used for strings
-static int string_hash(const void *key, size_t keysize) {
+static unsigned int string_hash(const void *key, size_t keysize) {
   (void) keysize;
   size_t keylen = strlen((const char*) key);
   return default_hash(key, keylen);
@@ -31,7 +31,8 @@ int main (int argc, char* argv[]) {
   (void) argv;
   
   CMap *map = cmap_create(sizeof(char *), sizeof(int),
-                          string_hash, string_cmp, NULL, 0);
+                          string_hash, string_cmp, 
+                          NULL, NULL, 0);
 
   assert(map != NULL);
   assert(cmap_count(map) == 0);
@@ -44,8 +45,18 @@ int main (int argc, char* argv[]) {
 
   assert(cmap_count(map) == 2);
 
-  const void *key = cmap_lookup(map, &a);
-  assert(strcmp(*(const char**)key, a) == 0);
+  // Check to make sure we can get values
+  const int *value = cmap_lookup(map, &a);
+  assert(*value == 1);
+
+  cmap_remove(map, &b);
+  assert(cmap_count(map) == 1);
+
+  value = cmap_lookup(map, &a);
+  assert(*value == 1);
+
+  value = cmap_lookup(map, &b);
+  assert(value == NULL);
 
   cmap_clear(map);
   assert(cmap_count(map) == 0);

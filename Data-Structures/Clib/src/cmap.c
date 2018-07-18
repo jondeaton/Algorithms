@@ -19,17 +19,18 @@
  * @brief Definition of HashTable implementation
  */
 struct CMapImplementation {
-  void *entries;            // Pointer to key-value pair array
-  void *end;                // End of buckets array
-  unsigned int capacity;             // maximum number of values that can be stored
-  unsigned int size;                 // The number of elements stored in the hash table
+  void *entries;                // Pointer to key-value pair array
+  void *end;                    // End of buckets array
+  unsigned int capacity;        // maximum number of values that can be stored
+  unsigned int size;            // The number of elements stored in the hash table
 
-  size_t key_size;          // The size of each key
-  size_t value_size;        // The size of each value
+  size_t key_size;              // The size of each key
+  size_t value_size;            // The size of each value
 
-  CleanupValueFn cleanup;   // A callback function for cleaning up a value in the map.
-  CMapHashFn hash;        // hash function callback
-  CMapCmpFn cmp;            // key comparison funciton
+  CleanupFn cleanupKey;      // Callback for key disposal
+  CleanupFn cleanupValue;  // Callback for value disposal
+  CMapHashFn hash;              // hash function callback
+  CMapCmpFn cmp;                // key comparison funciton
 };
 
 /**
@@ -86,7 +87,8 @@ static unsigned int default_hash(const void *key, size_t keysize) {
  * @return
  */
 CMap *cmap_create(size_t key_size, size_t value_size,
-                  CMapHashFn hash, CMapCmpFn cmp, CleanupValueFn fn,
+                  CMapHashFn hash, CMapCmpFn cmp, 
+                  CleanupFn cleanupKey, CleanupFn cleanupValue,
                   unsigned int capacity) {
   if (key_size <= 0 || value_size <= 0) return NULL;
 
@@ -111,7 +113,8 @@ CMap *cmap_create(size_t key_size, size_t value_size,
     set_free(e, true);
   }
 
-  cm->cleanup = fn;
+  cm->cleanupKey = cleanupKey;
+  cm->cleanupValue = cleanupValue;
   cm->hash = hash == NULL ? default_hash : hash;
   cm->cmp = cmp == NULL ? memcmp : cmp;
 
@@ -157,10 +160,9 @@ static inline struct entry *get_entry(const CMap *cm, unsigned int index) {
  */
 static struct entry *lookup_key(const CMap *cm, const void *key) {
   unsigned int hash = cm->hash(key, cm->key_size);
-  unsigned int start = hash % cm->capacity;
 
   for (unsigned int i = 0; i < cm->capacity; ++i) {
-    struct entry *e = get_entry(cm, (start + i) % cm->capacity);
+    struct entry *e = get_entry(cm, (hash + i) % cm->capacity);
     if (e == NULL || is_free(e)) continue;
 
     // Use cached hash value to do an easy/cache-friendly comparison
@@ -198,11 +200,10 @@ void *cmap_insert(CMap *cm, const void *key, const void *value) {
       return NULL;
 
   unsigned int hash = cm->hash(key, cm->key_size);
-  unsigned int start = hash % cm->capacity;
 
   struct entry *entry;
   for (unsigned int i = 0; i < cm->capacity; ++i) {
-    entry = get_entry(cm, (start + i) % cm->capacity);
+    entry = get_entry(cm, (hash + i) % cm->capacity);
     assert(entry != NULL);
     if (is_free(entry)) break;
   }
@@ -213,7 +214,7 @@ void *cmap_insert(CMap *cm, const void *key, const void *value) {
 
   set_free(entry, false);
   entry->hash = hash;
-  entry->origin = start;
+  entry->origin = hash % cm->capacity;
 
   cm->size++;
   return entry;
@@ -237,6 +238,18 @@ static inline void move(CMap *cm, struct entry *entry1, struct entry *entry2) {
   memcpy(entry1, entry2, entry_size(cm));
 }
 
+static void erase(CMap *cm, struct entry *e) {
+    assert(cm != NULL);
+    assert(e != NULL);
+
+    if (cm->cleanupKey != NULL)
+        cm->cleanupKey(key_of(e));
+    if (cm->cleanupValue != NULL)
+        cm->cleanupValue(value_of(cm, e));
+  
+    set_free(e, true);
+}
+
 static void delete(CMap *cm, unsigned int start, unsigned int stop) {
 
   // The entry to delete
@@ -257,15 +270,14 @@ static void delete(CMap *cm, unsigned int start, unsigned int stop) {
       break;
     }
   }
-  delete(cm, j, stop); // Tail recursion
+  delete(cm, j, stop); // tail recursion
 }
 
 static int lookup_index(const CMap *cm, const void *key) {
   unsigned int hash = cm->hash(key, cm->key_size);
-  unsigned int start = hash % cm->capacity;
 
   for (unsigned int i = 0; i < cm->capacity; ++i) {
-    struct entry *e = get_entry(cm, (start + i) % cm->capacity);
+    struct entry *e = get_entry(cm, (hash + i) % cm->capacity);
     if (e == NULL || is_free(e)) return -1;
 
     // Use cached hash value to do an easy/cache-friendly comparison
@@ -273,7 +285,7 @@ static int lookup_index(const CMap *cm, const void *key) {
 
     // Only dereference to compare full keys if you have to
     if (cm->cmp(&e->kv, key, cm->key_size) == 0)
-      return (start + i) % cm->capacity;
+      return (hash + i) % cm->capacity;
   }
   return -1;
 }
@@ -289,7 +301,11 @@ void cmap_remove(CMap *cm, const void *key) {
   int start = lookup_index(cm, key);
   if (start < 0) return;
   struct entry *e = get_entry(cm, start);
+  assert(e != NULL);
+  
+  erase(cm, e);
   delete(cm, start, e->origin);
+  cm->size--;
 }
 
 void cmap_dispose(CMap* cm) {
@@ -308,10 +324,10 @@ void cmap_clear(CMap *cm) {
   unsigned int num_cleared = 0;
   for (unsigned int i = 0; i < cm->capacity; ++i) {
     struct entry *e = get_entry(cm, i);
+    assert(e != NULL);
     if (is_free(e)) continue;
 
-    cm->cleanup(value_of(cm, e));
-    set_free(e, true);
+    erase(cm, e);
     num_cleared++;
 
     // If we've deleted them all, stop and save a bit of searching

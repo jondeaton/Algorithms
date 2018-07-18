@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-typedef void (*CleanupValueFn)(void *addr);
+typedef void (*CleanupFn)(void *addr);
 typedef unsigned int (*CMapHashFn)(const void *key, size_t keysize);
 typedef int (*CMapCmpFn)(const void *keyA, const void *keyB, size_t keysize);
 typedef struct CMapImplementation CMap;
@@ -17,7 +17,7 @@ typedef struct CMapImplementation CMap;
 
 CMap *cmap_create(size_t key_size, size_t value_size,
                   CMapHashFn hash, CMapCmpFn cmp,
-                  CleanupValueFn fn,
+                  CleanupFn cleanupKey, CleanupFn cleanupValue,
                   unsigned int capacity_hint);
 
 void cmap_dispose(CMap *cm);
