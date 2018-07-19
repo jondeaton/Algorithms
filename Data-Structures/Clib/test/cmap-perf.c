@@ -1,4 +1,5 @@
 
+#include "cmap.h"
 
 int main() {
 

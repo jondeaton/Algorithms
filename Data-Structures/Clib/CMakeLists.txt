@@ -31,3 +31,4 @@ set(HASHTABLE_SRC
 add_executable(test-pq test/test.c include/priority_queue.h src/priority_queue.c)
 
 add_executable(test-cmap test/cmap_test.c ${HASHTABLE_SRC})
+add_executable(perf-cmap test/cmap-perf.c ${HASHTABLE_SRC})
