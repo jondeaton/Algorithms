@@ -1,6 +1,6 @@
 /**
  * @file cmap.c
- * @brief Defines the implementation of a HashMap in C
+ * @brief Defines the implementation of a HashTable in C
  */
 
 #include "cmap.h"
@@ -49,10 +49,12 @@ struct entry {
 // Macros/functions for setting entry status bits
 #define FREE_MASK ((uint8_t) 1)
 
+// Read the "free bit" from the status bits in the entry
 static inline bool is_free(const struct entry* e) {
   return (bool) (e->status & FREE_MASK);
 }
 
+// Set the "free bit" in the status bits in the entry
 static inline void set_free(struct entry *e, bool free) {
   if (free) e->status |= FREE_MASK;
   else e->status &= ~FREE_MASK;
@@ -131,11 +133,11 @@ unsigned int cmap_count(const CMap* cm) {
 void *cmap_insert(CMap *cm, const void *key, const void *value) {
   if (cm == NULL || key == NULL || value == NULL) return NULL;
 
-  // There is no vacancy
+  // there is no vacancy
   if (cm->size == cm->capacity)
     return NULL;
 
-  unsigned int hash = cm->hash(key, cm->key_size);
+  unsigned int hash = cm->hash(key, cm->key_size) % cm->capacity;
 
   struct entry *entry;
   for (unsigned int i = 0; i < cm->capacity; ++i) {
@@ -257,7 +259,7 @@ static inline struct entry *get_entry(const CMap *cm, unsigned int index) {
 static struct entry *lookup_key(const CMap *cm, const void *key) {
   if (cm->size == 0) return NULL;
 
-  unsigned int hash = cm->hash(key, cm->key_size);
+  unsigned int hash = cm->hash(key, cm->key_size) % cm->capacity;
   for (unsigned int i = 0; i < cm->capacity; ++i) {
     struct entry *e = get_entry(cm, (hash + i) % cm->capacity);
     if (e == NULL || is_free(e)) continue;
@@ -320,7 +322,7 @@ static void delete(CMap *cm, unsigned int start, unsigned int stop) {
 }
 
 static int lookup_index(const CMap *cm, const void *key) {
-  unsigned int hash = cm->hash(key, cm->key_size);
+  unsigned int hash = cm->hash(key, cm->key_size) % cm->capacity;
 
   for (unsigned int i = 0; i < cm->capacity; ++i) {
     struct entry *e = get_entry(cm, (hash + i) % cm->capacity);
