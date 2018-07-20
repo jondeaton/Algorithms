@@ -61,6 +61,7 @@ static inline void set_free(struct entry *e, bool free) {
 }
 
 // static function declarations
+static inline struct entry *entry_of(const void *key);
 static inline size_t entry_size(const CMap *cm);
 static inline struct entry *get_entry(const CMap *cm, unsigned int index);
 static struct entry *lookup_key(const CMap *cm, const void *key);
@@ -121,15 +122,6 @@ unsigned int cmap_count(const CMap* cm) {
   return cm->size;
 }
 
-/**
- * @breif Inserts a key-value pair into the hash table
- * @param cm The CMap to insert a value into
- * @param key The key to insert
- * @param keysize The size of the key to insert
- * @param value The value to insert
- * @param valuesize The size of the value to insert
- * @return Pointer to the inserted key, if successfully inserted, othersie NULL.
- */
 void *cmap_insert(CMap *cm, const void *key, const void *value) {
   if (cm == NULL || key == NULL || value == NULL) return NULL;
 
@@ -139,12 +131,14 @@ void *cmap_insert(CMap *cm, const void *key, const void *value) {
 
   unsigned int hash = cm->hash(key, cm->key_size) % cm->capacity;
 
-  struct entry *entry;
+  // Locate a free entry (guaranteed to exist)
+  struct entry *entry = NULL;
   for (unsigned int i = 0; i < cm->capacity; ++i) {
     entry = get_entry(cm, (hash + i) % cm->capacity);
-    assert(entry != NULL);
     if (is_free(entry)) break;
   }
+
+  assert(entry != NULL);
 
   // Fill the entry with the key-value pair
   memcpy(key_of(entry), key, cm->key_size);
@@ -157,13 +151,7 @@ void *cmap_insert(CMap *cm, const void *key, const void *value) {
   return entry;
 }
 
-/**
- * @breif looks up a key-value pair in in the hash table
- * @param cm The hash map to lookup the value in
- * @param key The key to lookup
- * @return Pointer to the value stored in the hash table. If there
- * is no such key in the hash table then NULL.
- */
+
 void *cmap_lookup(const CMap *cm, const void *key) {
   if (cm == NULL || key == NULL) return NULL;
   struct entry *entry = lookup_key(cm, key);
@@ -171,11 +159,6 @@ void *cmap_lookup(const CMap *cm, const void *key) {
   return value_of(cm, entry);
 }
 
-/**
- * @breif Removes a key-value pair from the hash table
- * @param cm Hash table to remove the key value pair from
- * @param key The key to remove
- */
 void cmap_remove(CMap *cm, const void *key) {
   if (cm == NULL || key == NULL) return;
 
@@ -189,10 +172,6 @@ void cmap_remove(CMap *cm, const void *key) {
   cm->size--;
 }
 
-/**
- * @breif Removes all of the elements from the hash tabls
- * @param cm The CMap to remove all the elements from
- */
 void cmap_clear(CMap *cm) {
   if (cm == NULL) return;
 
@@ -222,21 +201,20 @@ const void *cmap_first(const CMap *cm) {
   return NULL;
 }
 
-/**
- * @breif Gets a pointer to the next key
- * @param cm The hash table
- * @param prevkey The previous key
- * @return pointer to the next key, if there is one.
- */
 const void *cmap_next(const CMap *cm, const void *prevkey) {
   if (cm == NULL || prevkey == NULL) return NULL;
 
-  const struct entry *e = (struct entry *) ((char *) prevkey - offsetof(struct entry, kv));
+  const struct entry *e = entry_of(prevkey);
   while (e != cm->end) {
     e = (struct entry *) ((char *) e + entry_size(cm));
     if (!is_free(e)) return key_of(e);
   }
   return NULL;
+}
+
+// Gives the entry for a given key
+static inline struct entry *entry_of(const void *key) {
+  return (struct entry *) ((char *) key - offsetof(struct entry, kv));
 }
 
 static inline size_t entry_size(const CMap *cm) {
@@ -261,8 +239,7 @@ static struct entry *lookup_key(const CMap *cm, const void *key) {
 
   unsigned int hash = cm->hash(key, cm->key_size) % cm->capacity;
   for (unsigned int i = 0; i < cm->capacity; ++i) {
-    unsigned int index = (hash + i) % cm->capacity;
-    struct entry *e = get_entry(cm, index);
+    struct entry *e = get_entry(cm, (hash + i) % cm->capacity);
     if (e == NULL || is_free(e)) continue;
 
     // Use cached hash value to do an easy/cache-friendly comparison
@@ -319,7 +296,7 @@ static void delete(CMap *cm, unsigned int start, unsigned int stop) {
       break;
     }
   }
-  delete(cm, j, stop); // tail recursion
+  delete(cm, j, stop); // tail recursion optimization!
 }
 
 static int lookup_index(const CMap *cm, const void *key) {

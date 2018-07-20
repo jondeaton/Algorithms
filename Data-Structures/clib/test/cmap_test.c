@@ -14,7 +14,6 @@ const char *const alphabet[] = { "a", "b", "c", "d", "e", "f", "g",
                                  "o", "p", "q", "r", "s", "t", "u",
                                  "v", "w", "x", "y", "z"};
 
-
 // Testing to make sure that you can use all kinds
 // of key and value sizes
 static bool test_creation() {

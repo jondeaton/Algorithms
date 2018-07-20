@@ -45,12 +45,48 @@ void cmap_dispose(CMap *cm);
  */
 unsigned int cmap_count(const CMap *cm);
 
+/**
+ * @breif Inserts a key-value pair into the hash table
+ * @param cm The CMap to insert a value into
+ * @param key The key to insert
+ * @param keysize The size of the key to insert
+ * @param value The value to insert
+ * @param valuesize The size of the value to insert
+ * @return Pointer to the inserted key, if successfully inserted, othersie NULL.
+ */
 void *cmap_insert(CMap *cm, const void *key, const void *value);
 
+/**
+ * @breif looks up a key-value pair in in the hash table
+ * @param cm The hash map to lookup the value in
+ * @param key The key to lookup
+ * @return Pointer to the value stored in the hash table. If there
+ * is no such key in the hash table then NULL.
+ */
 void *cmap_lookup(const CMap *cm, const void *key);
+
+/**
+ * @breif Removes a key-value pair from the hash table
+ * @param cm Hash table to remove the key value pair from
+ * @param key The key to remove
+ */
 void cmap_remove(CMap *cm, const void *key);
+
+/**
+ * @breif Removes all of the elements from the hash tabls
+ * @param cm The CMap to remove all the elements from
+ */
 void cmap_clear(CMap *cm);
+
+
 const void * cmap_first(const CMap *cm);
+
+/**
+ * Gets a pointer to the next key
+ * @param cm The hash table
+ * @param prevkey The previous key
+ * @return pointer to the next key, if there is one.
+ */
 const void * cmap_next(const CMap *cm, const void *prevkey);
 
 #endif
