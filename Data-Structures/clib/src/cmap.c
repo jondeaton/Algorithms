@@ -261,7 +261,8 @@ static struct entry *lookup_key(const CMap *cm, const void *key) {
 
   unsigned int hash = cm->hash(key, cm->key_size) % cm->capacity;
   for (unsigned int i = 0; i < cm->capacity; ++i) {
-    struct entry *e = get_entry(cm, (hash + i) % cm->capacity);
+    unsigned int index = (hash + i) % cm->capacity;
+    struct entry *e = get_entry(cm, index);
     if (e == NULL || is_free(e)) continue;
 
     // Use cached hash value to do an easy/cache-friendly comparison

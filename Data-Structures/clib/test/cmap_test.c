@@ -8,20 +8,24 @@
 
 #define unused __attribute__ ((unused))
 
+#define NUM_LETTERS 26
+const char *const alphabet[] = { "a", "b", "c", "d", "e", "f", "g",
+                                 "h", "i", "j", "k", "l", "m", "n",
+                                 "o", "p", "q", "r", "s", "t", "u",
+                                 "v", "w", "x", "y", "z"};
+
+
 // Testing to make sure that you can use all kinds
 // of key and value sizes
 static bool test_creation() {
   for (size_t keysize = 1; keysize <= 32; keysize++) {
-    for (size_t valuesize = 1; valuesize; valuesize++) {
+    for (size_t valuesize = 1; valuesize <= 32; valuesize++) {
 
       CMap *map = cmap_create(keysize, valuesize,
-                              NULL, NULL, NULL, NULL, 0);
+                              NULL, NULL, NULL, NULL, (unsigned int) (keysize * valuesize));
 
-      if (map == NULL)
-        return false;
-
-      if (cmap_count(map) != 0)
-        return false;
+      if (map == NULL) return false;
+      if (cmap_count(map) != 0) return false;
 
       cmap_dispose(map);
     }
@@ -29,75 +33,115 @@ static bool test_creation() {
  return true;
 }
 
-static bool test_insertion() {
+static bool test_insertion(unsigned int capacity) {
   CMap *map = cmap_create(sizeof(char *), sizeof(int),
                           string_hash, string_cmp,
-                          NULL, NULL, 0);
+                          NULL, NULL, capacity);
 
-  assert(map != NULL);
-  assert(cmap_count(map) == 0);
+  if (map == NULL)
+    return false;
 
-  const char *a = "a";
-  const char *b = "b";
+  if (cmap_count(map) != 0)
+    return false;
 
-  cmap_insert(map, &a, &(int){1});
-  cmap_insert(map, &b, &(int){2});
+  for (int i = 0; i < NUM_LETTERS; ++i) {
+    const char *const letter = alphabet[i];
+    cmap_insert(map, &letter, &i);
+  }
 
-  assert(cmap_count(map) == 2);
+  if (cmap_count(map) != NUM_LETTERS)
+    return false;
 
-  // Check to make sure we can get values
-  const int *value = cmap_lookup(map, &a);
-  assert(*value == 1);
+  // Make sure they're all in there
+  for (int i = 0; i < NUM_LETTERS; ++i) {
+    const char *const letter = alphabet[i];
+    const void *l = cmap_lookup(map, &letter);
+
+    if (l == NULL)
+      return false;
+
+    if (*(int*) l != i)
+      return false;
+  }
 
   return true;
 }
 
-
-static bool test_deletion() {
+static bool test_deletion(unsigned int capacity) {
   CMap *map = cmap_create(sizeof(char *), sizeof(int),
                           string_hash, string_cmp,
-                          NULL, NULL, 0);
+                          NULL, NULL, capacity);
 
-  assert(map != NULL);
-  assert(cmap_count(map) == 0);
+  if (map == NULL)
+    return false;
+  if (cmap_count(map) != 0)
+    return false;
 
-  const char *a = "a";
-  const char *b = "b";
+  for (int i = 0; i < NUM_LETTERS; ++i) {
+    const char *const letter = alphabet[i];
+    cmap_insert(map, &letter, &i);
+  }
 
-  cmap_insert(map, &a, &(int){1});
-  cmap_insert(map, &b, &(int){2});
+  if (cmap_count(map) != NUM_LETTERS) return false;
 
-  assert(cmap_count(map) == 2);
+  // Make sure they're all in there
+  for (int i = 0; i < NUM_LETTERS; ++i) {
+    const char * letter = alphabet[i];
+    const void *l = cmap_lookup(map, &letter);
+    if (l == NULL)
+      return false;
+    if (*(int*) l != i)
+      return false;
+  }
 
-  // Check to make sure we can get values
-  const int *value = cmap_lookup(map, &a);
-  assert(*value == 1);
+  // Make sure that you can remove things, and that they go away
+  for (int i = 0; i < NUM_LETTERS; ++i) {
+    const char * letter = alphabet[i];
+    cmap_remove(map, &letter);
 
-  cmap_remove(map, &b);
-  assert(cmap_count(map) == 1);
+    // Make sure it's gone
+    const void *value = cmap_lookup(map, &letter);
+    if (value != NULL)
+      return false;
 
-  value = cmap_lookup(map, &a);
-  assert(*value == 1);
+    // Make sure count reflects deletion
+    if (cmap_count(map) != (unsigned int) (NUM_LETTERS - (i + 1)))
+      return false;
 
-  value = cmap_lookup(map, &b);
-  assert(value == NULL);
+    // Make sure all the *others* are still in there
+    for (int j = i + 1; i < NUM_LETTERS; ++i) {
+      letter = alphabet[j];
+      value = cmap_lookup(map, &letter);
+      if (value == NULL)
+        return false;
+      if (*(int*) value != j)
+        return false;
+    }
+  }
 
-  cmap_clear(map);
-  assert(cmap_count(map) == 0);
-
-  assert(cmap_lookup(map, &a) == NULL);
   cmap_dispose(map);
-
   return true;
-}
-
-void functionality_test() {
-  test_creation();
-  test_insertion();
-  test_deletion();
 }
 
 int main (int argc unused, char* argv[] unused) {
-  functionality_test();
+
+  printf("Testing creation of Hash Table... ");
+  bool success = test_creation();
+  printf("%s\n", success ? "success" : "failure");
+
+  printf("Testing insertion into Hash Table... ");
+  for (unsigned int capacity = 30; capacity < 200; capacity += 10) {
+    success = test_insertion(capacity);
+    if (!success) break;
+  }
+  printf("%s\n", success ? "success" : "failure");
+
+  printf("Testing deletion from Hash Table... ");
+  for (unsigned int capacity = 30; capacity < 200; capacity += 10) {
+    success = test_deletion(capacity);
+    if (!success) break;
+  }
+  printf("%s\n", success ? "success" : "failure");
+
   return 0;
 }
