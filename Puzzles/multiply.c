@@ -4,7 +4,7 @@
 /*
  * This is a solution to the puzzle:
  * Write a function that multiplies two numbers without
- * using the multiplication primitive.
+ * using the multiplication operator.
  */
 
 // naive implementation, takes O(m) time.
