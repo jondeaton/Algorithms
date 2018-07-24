@@ -8,6 +8,6 @@ def water(heights: Seq[Int]): Int = {
 	val leftMax = heights.scanLeft(0)(max)
 	val rightMax = heights.scanRight(0)(max)
 	(heights, leftMax, rightMax).zipped.map((h, l, r) =>
-		max(0, min(l, r) - h)
+		max(0, min(l, r) - h) // water above one bar
 	).sum
 }
