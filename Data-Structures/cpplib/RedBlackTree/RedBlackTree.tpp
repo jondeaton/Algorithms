@@ -10,6 +10,8 @@
 #include "BinaryNode.h"
 #include "RedBlackTree.h"
 #include <memory>
+#include <tuple>
+#include <limits>
 
 template <class T>
 using Node = std::shared_ptr<BinaryNode<T>>;
@@ -42,7 +44,9 @@ Node<T> RedBlackTree<T>::search(const T& element) {
 
 template <class T>
 bool RedBlackTree<T>::verify() {
-  return verify(root);
+    bool isbst;
+    std::tie(isbst, std::ignore, std::ignore) = is_bst(root);
+    return isbst && is_rbt(root);
 }
 
 // Private members
@@ -528,10 +532,37 @@ Side RedBlackTree<T>::redChild(const Node<T> node) {
 }
 
 /**
- * Private Method: verify
+ * Private Method: is_bst
+ * ----------------------
+ *  Verifies that a node is a binary search tree by making sure that it's value is 
+ *  greater than and less than the maximum and minimum values of it's left and right 
+ *  sub-trees, respectively
+ *  @param node The root node of a BST to check if it's values are greater than or less than others
+ *  @return tuple containing whether the tree with root node is a BST and the minimum and maximum
+ *  values found in the entire tree
+ */
+template <class T>
+std::tuple<bool, T, T> RedBlackTree<T>::is_bst(const Node<T> node) {
+
+    if (node == nullptr) 
+        return { true, std::numeric_limits<T>::max(), std::numeric_limits<T>::min() };
+
+    bool left_is_bst, right_is_bst;
+    T left_min, left_max, right_min, right_max;
+
+    std::tie(left_is_bst, left_min, left_max) = is_bst(node->left);
+    std::tie(right_is_bst, right_min, right_max) = is_bst(node->right);
+
+    bool is_bst = left_is_bst && right_is_bst 
+        && node->value >= left_max && node->value <= right_min;
+    
+    return { is_bst, std::min(node->value, left_min), std::max(node->value, right_max) };
+}
+
+/**
+ * Private Method: is_rbt
  * ----------------------
  * Verifies that a node is properly formed by checking to make sure that:
- *  - It's value is strictly less than and greater than it's left child and right child's values, respectively.
  *  - If it is red, then it does not have a red child (red violation)
  *  - The black heights of its two children are equal (black height violation)
  *  - Both child nodes are properly formed
@@ -540,12 +571,12 @@ Side RedBlackTree<T>::redChild(const Node<T> node) {
  * @return: True if the node (and all of it's children) are well formed, false otherwise
  */
 template <class T>
-bool RedBlackTree<T>::verify(const Node<T> node) {
-  if (node == nullptr) return true;
-
-  // Correct value placements
-  if (node->left != nullptr && node->left->value >= node->value)
-    return false;
+bool RedBlackTree<T>::is_rbt(const Node<T> node) {
+    if (node == nullptr) return true;
+    
+    // Correct value placements
+    if (node->left != nullptr && node->left->value >= node->value)
+        return false;
 
   if (node->right != nullptr && node->right->value <= node->value)
     return false;
@@ -570,5 +601,7 @@ bool RedBlackTree<T>::verify(const Node<T> node) {
   if (leftHeight != rightHeight)
     return false;
 
-  return verify(node->left) && verify(node->right); // check every sub-tree
+  return is_rbt(node->left) && is_rbt(node->right); // check every sub-tree
+
 }
+
