@@ -10,6 +10,7 @@
 
 #include "BinaryNode.h"
 #include <memory>
+#include <tuple>
 
 template <class T>
 using Node = std::shared_ptr<BinaryNode<T>>;
@@ -121,7 +122,8 @@ private:
   Side redChild(const Node<T> node);
   size_t getHeight(const Node<T> node);
 
-  bool verify(const Node<T> node);
+  bool is_rbt(const Node<T> node);
+  std::tuple<bool, T, T> is_bst(const Node<T> node);
 };
 
 #include "RedBlackTree.tpp"
