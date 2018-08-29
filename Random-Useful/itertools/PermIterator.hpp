@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <iterator>
 
-
 template <typename Integer>
 Integer factorial(const Integer k) {
   Integer f(1);
@@ -11,15 +10,12 @@ Integer factorial(const Integer k) {
 }
 
 /*
- * Rearanges the elements of [begin, end) to be the n'th permutation
- * of them lexocographically, as given by the comparator
+ * Rearranges the elements of [begin, end) to be the n'th permutation
+ * of them lexicographically, as given by the comparator
  */
 template <typename RandomIterator, typename Integer, typename Comparator>
-void nthPermutation(RandomIterator begin, RandomIterator end, Integer n,
-    Comparator cmp) {
-
-  // sort the elements lexicographically
-  std::sort(begin, end, cmp);
+void nthPermutation(RandomIterator begin, RandomIterator end, Integer n, Comparator cmp) {
+  std::sort(begin, end, cmp);  // sort the elements lexicographically
 
   const Integer k(end - begin);
   const Integer radix = factorial(k);
@@ -33,18 +29,6 @@ void nthPermutation(RandomIterator begin, RandomIterator end, Integer n,
       radix /= (k - i - 1);
   }
 }
-
-
-template <typename T, typename RandomIterator>
-class PermIterator {
-  public:
-    explicit PermIterator(RandomIterator begin, RandomIterator, end);
-
-
-
-
-};
-
 
 
 

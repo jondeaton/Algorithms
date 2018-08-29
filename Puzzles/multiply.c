@@ -33,6 +33,16 @@ int mul(int k, int m) {
     return p + p;
 }
 
+
+int mult(int k, int m) {
+
+  
+
+
+__builtin_ctz
+  return 0;
+}
+
 int main(int argc, char *argv[]) {
   int k = atoi(argv[1]);
   int m = atoi(argv[2]);
