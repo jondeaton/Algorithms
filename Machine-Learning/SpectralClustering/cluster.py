@@ -1,26 +1,23 @@
 #!/usr/bin/env python
 """
 File: cluster
-Date: 12/17/18 
+Date: 12/17/18
 Author: Jon Deaton (jdeaton@stanford.edu)
 
 Inspired by "A Tutorial on Spectral Clustering" by Ulrike von Luxburg
 http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/Luxburg07_tutorial_4488%5b0%5d.pdf
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.cluster import SpectralClustering
-from sklearn.mixture import GaussianMixture
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-from sklearn.metrics.cluster import completeness_score
-from sklearn.neighbors import NearestNeighbors
-
-import scipy
-
 from enum import Enum
 
+import scipy
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.metrics.cluster import completeness_score, homogeneity_score
+from sklearn.neighbors import NearestNeighbors
 
 
 class Similarity(Enum):
@@ -36,13 +33,13 @@ class LaplacianNorm(Enum):
 
 def draw_points(m, n, k):
     # Sample m points from an n dimensional mixture of k Gaussians
-    mu = np.random.random((k, n)) * 10
+    mu = np.random.random((k, n)) * 8
 
     # random covariance matrices
     sigma = np.empty((k, n, n))
     for j in range(k):
         s = np.random.randn(n, n)
-        sigma[j] = np.matmul(s, s.T) / 20
+        sigma[j] = np.matmul(s, s.T) / 30
         # sigma[j] = np.eye(n) / 10
 
     phi = np.random.random(k)
@@ -118,23 +115,26 @@ def spectral_clustering(S, k, normalization=None, generalized_eigenproblem=False
 
     W = S.copy()
     d = W.sum(axis=1)
-    D = np.diag(d)
-    I = np.eye(m)
+    D = None
 
     if normalization is None:
         # un-normalized graph Laplacian
+        D = np.diag(d)
         L = D - W
     elif normalization == LaplacianNorm.symmetric:
         D_sqrt_neg = np.diag(np.power(d, -0.5))
+        I = np.eye(m)
         L = I - np.matmul(np.matmul(D_sqrt_neg, W), D_sqrt_neg)  # I - D^{-1/2} W D^{-1/2}
-
     elif normalization == LaplacianNorm.random_walk:
         D_inv = np.diag(1 / d)
+        I = np.eye(m)
         L = I - np.matmul(D_inv, W)  # I - D^{-1} W
     else:
         raise ValueError("Unrecognized Laplacian normalization: %s" % normalization)
 
     if generalized_eigenproblem:
+        if D is None:
+            D = np.diag(d)
         w, v = scipy.linalg.eig(L, D)
     else:
         w, v = np.linalg.eig(L)
@@ -164,6 +164,7 @@ def spectral_clustering(S, k, normalization=None, generalized_eigenproblem=False
 
 def show_points(X, z, title=None):
     m, n = X.shape
+    if n == 0 or m == 0: return
 
     if n > 2:
         pca = PCA(n_components=2)
@@ -183,11 +184,11 @@ def show_points(X, z, title=None):
 
 
 def main():
-    np.random.seed(3)
-    m = 500
-    n = 20
-    k = 10
+    m = 2000 # number of points
+    n = 50 # Number of dimensions
+    k = 30 # Number of latent clusters
 
+    np.random.seed(3)
     X, z_true = draw_points(m, n, k=k)
     show_points(X, z_true, title="True")
 
@@ -204,8 +205,10 @@ def main():
 
     show_points(X, A, title="Spectral Clustering")
 
-    score = completeness_score(z_true, A)
-    print("Score: %s" % score)
+    complete_score = completeness_score(z_true, A)
+    homog_score = homogeneity_score(z_true, A)
+    print("Completeness score: %s" % complete_score)
+    print("Homogeneity score: %s" % homog_score)
 
 
 if __name__ == "__main__":
