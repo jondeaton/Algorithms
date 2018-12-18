@@ -3,6 +3,9 @@
 File: cluster
 Date: 12/17/18 
 Author: Jon Deaton (jdeaton@stanford.edu)
+
+Inspired by "A Tutorial on Spectral Clustering" by Ulrike von Luxburg
+http://www.kyb.mpg.de/fileadmin/user_upload/files/publications/attachments/Luxburg07_tutorial_4488%5b0%5d.pdf
 """
 
 import numpy as np
@@ -14,7 +17,10 @@ from sklearn.decomposition import PCA
 from sklearn.metrics.cluster import completeness_score
 from sklearn.neighbors import NearestNeighbors
 
+import scipy
+
 from enum import Enum
+
 
 
 class Similarity(Enum):
@@ -73,6 +79,7 @@ def epsilon_neighborhood_similarity(X, epsilon=1.7):
         S[:, i] = S[i, :]
     return S
 
+
 def k_nearest_neighbor_graph(X, k=5, mutual=False):
     m, n = X.shape
 
@@ -106,29 +113,38 @@ def similarity_matrix(X, similarity_method=Similarity.fully_connected, **kwargs)
     return S
 
 
-def spectral_clustering(S, k, normalization=None):
+def spectral_clustering(S, k, normalization=None, generalized_eigenproblem=False, norm_rows=False):
     m, _ = S.shape
 
     W = S.copy()
     d = W.sum(axis=1)
+    D = np.diag(d)
     I = np.eye(m)
 
-    if normalization == LaplacianNorm.symmetric:
+    if normalization is None:
+        # un-normalized graph Laplacian
+        L = D - W
+    elif normalization == LaplacianNorm.symmetric:
         D_sqrt_neg = np.diag(np.power(d, -0.5))
         L = I - np.matmul(np.matmul(D_sqrt_neg, W), D_sqrt_neg)  # I - D^{-1/2} W D^{-1/2}
 
     elif normalization == LaplacianNorm.random_walk:
         D_inv = np.diag(1 / d)
         L = I - np.matmul(D_inv, W)  # I - D^{-1} W
-
     else:
-        # un-normalized graph Laplacian
-        D = np.diag(d)
-        L = D - W
+        raise ValueError("Unrecognized Laplacian normalization: %s" % normalization)
 
-    w, v = np.linalg.eig(L)
+    if generalized_eigenproblem:
+        w, v = scipy.linalg.eig(L, D)
+    else:
+        w, v = np.linalg.eig(L)
+
     order = w.argsort()
     U = v[:, order[:k]]  # first k eigenvalues
+
+    if norm_rows:
+        row_sums = np.linalg.norm(U, axis=1)
+        U = U / row_sums[:, np.newaxis]
 
     plt.figure()
     plt.plot(sorted(w))
@@ -167,17 +183,24 @@ def show_points(X, z, title=None):
 
 
 def main():
-    np.random.seed(1)
-    m = 2000
+    np.random.seed(3)
+    m = 500
     n = 20
     k = 10
 
     X, z_true = draw_points(m, n, k=k)
     show_points(X, z_true, title="True")
 
-    # S = k_nearest_neighbor_graph(X, k=40, mutual=False)
     S = fully_connected_similarity(X)
-    A = spectral_clustering(S, k, normalization=LaplacianNorm.symmetric)
+
+    # Unnormalized spectral clustering
+    # A = spectral_clustering(S, k)
+
+    # Normalized spectral clustering according to Shi and Malik (2000)
+    # A = spectral_clustering(S, k, normalization=LaplacianNorm.symmetric, generalized_eigenproblem=True)
+
+    # Normalized spectral clustering according to Ng, Jordan, and Weiss (2002)
+    A = spectral_clustering(S, k, normalization=LaplacianNorm.symmetric, norm_rows=True)
 
     show_points(X, A, title="Spectral Clustering")
 
