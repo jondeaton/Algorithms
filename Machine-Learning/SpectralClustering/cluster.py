@@ -23,16 +23,21 @@ class Similarity(Enum):
     fully_connected = 3
 
 
+class LaplacianNorm(Enum):
+    symmetric = 1
+    random_walk = 2
+
+
 def draw_points(m, n, k):
     # Sample m points from an n dimensional mixture of k Gaussians
-    mu = np.random.random((k, n)) * 5
+    mu = np.random.random((k, n)) * 10
 
     # random covariance matrices
     sigma = np.empty((k, n, n))
     for j in range(k):
         s = np.random.randn(n, n)
-        # sigma[j] = np.matmul(s, s.T)
-        sigma[j] = np.eye(n) / 10
+        sigma[j] = np.matmul(s, s.T) / 20
+        # sigma[j] = np.eye(n) / 10
 
     phi = np.random.random(k)
     phi /= phi.sum()
@@ -66,9 +71,9 @@ def epsilon_neighborhood_similarity(X, epsilon=1.7):
         dists = np.linalg.norm(X - x, ord=2, axis=1)
         S[i, :] = (dists < epsilon).astype(float)
         S[:, i] = S[i, :]
+    return S
 
-
-def k_nearest_neighbor_graph(X, k=5):
+def k_nearest_neighbor_graph(X, k=5, mutual=False):
     m, n = X.shape
 
     knn = NearestNeighbors(n_neighbors=k)
@@ -78,7 +83,14 @@ def k_nearest_neighbor_graph(X, k=5):
     S = np.zeros((m, m), dtype=int)
     for i in range(m):
         S[i, indices[i]] += 1
-    S = np.where(S > 0, 1, 0).astype(float)
+
+    S = S + S.T
+    if mutual:
+        # mutual nearest neighbors
+        S = np.where(S == 2, 1, 0)
+    else:
+        S = np.where(S > 0, 1, 0)
+
     return S
 
 
@@ -94,10 +106,25 @@ def similarity_matrix(X, similarity_method=Similarity.fully_connected, **kwargs)
     return S
 
 
-def spectral_clustering(S, k):
+def spectral_clustering(S, k, normalization=None):
+    m, _ = S.shape
+
     W = S.copy()
-    D = np.diag(W.sum(axis=1))
-    L = D - W  # Laplacian
+    d = W.sum(axis=1)
+    I = np.eye(m)
+
+    if normalization == LaplacianNorm.symmetric:
+        D_sqrt_neg = np.diag(np.power(d, -0.5))
+        L = I - np.matmul(np.matmul(D_sqrt_neg, W), D_sqrt_neg)  # I - D^{-1/2} W D^{-1/2}
+
+    elif normalization == LaplacianNorm.random_walk:
+        D_inv = np.diag(1 / d)
+        L = I - np.matmul(D_inv, W)  # I - D^{-1} W
+
+    else:
+        # un-normalized graph Laplacian
+        D = np.diag(d)
+        L = D - W
 
     w, v = np.linalg.eig(L)
     order = w.argsort()
@@ -140,17 +167,17 @@ def show_points(X, z, title=None):
 
 
 def main():
-    # np.random.seed(1)
-    m = 1500
+    np.random.seed(1)
+    m = 2000
     n = 20
-    k = 3
+    k = 10
 
     X, z_true = draw_points(m, n, k=k)
     show_points(X, z_true, title="True")
 
-    S = k_nearest_neighbor_graph(X, k=40)
-
-    A = spectral_clustering(S, k)
+    # S = k_nearest_neighbor_graph(X, k=40, mutual=False)
+    S = fully_connected_similarity(X)
+    A = spectral_clustering(S, k, normalization=LaplacianNorm.symmetric)
 
     show_points(X, A, title="Spectral Clustering")
 
