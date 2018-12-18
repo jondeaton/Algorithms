@@ -123,14 +123,14 @@ def sample(X, y, n_samples):
 
 
 def main():
-    X, y = load_virus_data()
-    # X, y = load_simple_data()
+    # X, y = load_virus_data()
+    X, y = load_simple_data()
     # X, y = load_ring_data()
 
     # X, y = sample(X, y, 500)
     # X = PCA(n_components=10).fit_transform(X.T).T
 
-    X, y = lasso(X, y)
+    # X, y = lasso(X, y)
     # show_data(X, y)
 
     print("Features: %d" % X.shape[0])

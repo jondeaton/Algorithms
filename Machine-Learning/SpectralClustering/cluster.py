@@ -12,18 +12,27 @@ from sklearn.mixture import GaussianMixture
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics.cluster import completeness_score
+from sklearn.neighbors import NearestNeighbors
+
+from enum import Enum
+
+
+class Similarity(Enum):
+    eps_neighborhood = 1
+    knn = 2
+    fully_connected = 3
 
 
 def draw_points(m, n, k):
-
-    mu = np.random.random((k, n)) * 10
+    # Sample m points from an n dimensional mixture of k Gaussians
+    mu = np.random.random((k, n)) * 5
 
     # random covariance matrices
     sigma = np.empty((k, n, n))
     for j in range(k):
         s = np.random.randn(n, n)
         # sigma[j] = np.matmul(s, s.T)
-        sigma[j] = np.eye(n) / 20
+        sigma[j] = np.eye(n) / 10
 
     phi = np.random.random(k)
     phi /= phi.sum()
@@ -37,17 +46,51 @@ def draw_points(m, n, k):
     return X, z
 
 
-def similarity_matrix(X):
+def fully_connected_similarity(X, neighborhood_width=1):
+    sigma = neighborhood_width
     m, n = X.shape
-
-    sigma = 1  # neighborhood width
-
     S = np.empty((m, m))
-    for i in range(m // 2):
+    for i in range(m // 2 + 1):
         x = X[i]
         dists = np.linalg.norm(X - x, ord=2, axis=1)
         S[i, :] = np.exp(- dists / (2 * pow(sigma, 2)))
         S[:, i] = S[i, :]
+    return S
+
+
+def epsilon_neighborhood_similarity(X, epsilon=1.7):
+    m, n = X.shape
+    S = np.empty((m, m))
+    for i in range(m // 2 + 1):
+        x = X[i]
+        dists = np.linalg.norm(X - x, ord=2, axis=1)
+        S[i, :] = (dists < epsilon).astype(float)
+        S[:, i] = S[i, :]
+
+
+def k_nearest_neighbor_graph(X, k=5):
+    m, n = X.shape
+
+    knn = NearestNeighbors(n_neighbors=k)
+    nbrs = knn.fit(X)
+    _, indices = nbrs.kneighbors(X)
+
+    S = np.zeros((m, m), dtype=int)
+    for i in range(m):
+        S[i, indices[i]] += 1
+    S = np.where(S > 0, 1, 0).astype(float)
+    return S
+
+
+def similarity_matrix(X, similarity_method=Similarity.fully_connected, **kwargs):
+    if similarity_method == Similarity.fully_connected:
+        S = fully_connected_similarity(X, **kwargs)
+    elif similarity_method == Similarity.eps_neighborhood:
+        S = epsilon_neighborhood_similarity(X, **kwargs)
+    elif similarity_method == Similarity.knn:
+        S = k_nearest_neighbor_graph(X, **kwargs)
+    else:
+        raise ValueError("Unknown similarity method %s" % similarity_method)
     return S
 
 
@@ -82,7 +125,7 @@ def show_points(X, z, title=None):
     if n > 2:
         pca = PCA(n_components=2)
         x = pca.fit_transform(X)
-        show_points(x, z, title=title)
+        return show_points(x, z, title=title)
 
     if n == 1:
         plt.figure()
@@ -97,15 +140,15 @@ def show_points(X, z, title=None):
 
 
 def main():
-    np.random.seed(1)
-    m = 1000
-    n = 2
-    k = 2
+    # np.random.seed(1)
+    m = 1500
+    n = 20
+    k = 3
 
     X, z_true = draw_points(m, n, k=k)
     show_points(X, z_true, title="True")
 
-    S = similarity_matrix(X)
+    S = k_nearest_neighbor_graph(X, k=40)
 
     A = spectral_clustering(S, k)
 

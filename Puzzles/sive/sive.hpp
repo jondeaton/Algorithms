@@ -8,8 +8,7 @@ void eratosthenes(T n, std::vector<bool> &prime) {
    * sized bitset. Thus we are only using one bit per number. */
   for (T i = 0; i <= n; i++) prime[i] = true;
   prime[0] = false;
-  prime[1] = false;
-
+  prime[1] = false; 
   /* Only need to go up to the square root of n. */
   for (int i = 2; i * i < n; ++i) {
     if (prime[i]) {
