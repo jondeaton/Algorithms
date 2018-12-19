@@ -14,7 +14,7 @@ import scipy
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.decomposition import PCA
 from sklearn.metrics.cluster import completeness_score, homogeneity_score
 from sklearn.neighbors import NearestNeighbors
@@ -31,15 +31,20 @@ class LaplacianNorm(Enum):
     random_walk = 2
 
 
+class Distance(Enum):
+    euclidian = 1
+    cosine_similarity = 2
+
+
 def draw_points(m, n, k):
     # Sample m points from an n dimensional mixture of k Gaussians
-    mu = np.random.random((k, n)) * 8
+    mu = np.random.random((k, n)) * 5
 
     # random covariance matrices
     sigma = np.empty((k, n, n))
     for j in range(k):
         s = np.random.randn(n, n)
-        sigma[j] = np.matmul(s, s.T) / 30
+        sigma[j] = np.matmul(s, s.T) / 20
         # sigma[j] = np.eye(n) / 10
 
     phi = np.random.random(k)
@@ -54,30 +59,38 @@ def draw_points(m, n, k):
     return X, z
 
 
-def fully_connected_similarity(X, neighborhood_width=1):
+def fully_connected_similarity(X, dist=Distance.euclidian, neighborhood_width=1):
     sigma = neighborhood_width
     m, n = X.shape
+
     S = np.empty((m, m))
-    for i in range(m // 2 + 1):
-        x = X[i]
-        dists = np.linalg.norm(X - x, ord=2, axis=1)
-        S[i, :] = np.exp(- dists / (2 * pow(sigma, 2)))
-        S[:, i] = S[i, :]
+    for i in range(m):
+        xi = X[i]
+
+        if dist == Distance.euclidian:
+            dists = np.linalg.norm(X - xi, ord=2, axis=1)
+            S[i, :] = np.exp(- dists / (2 * pow(sigma, 2)))
+
+        elif dist == Distance.cosine_similarity:
+            dists = 1 + np.matmul(X, xi) / (np.linalg.norm(xi) * np.linalg.norm(X, axis=1))
+            S[i, :] = np.power(dists, 2)
+
+        else:
+            raise ValueError("Unrecognized distance metric: %s" % dist)
     return S
 
 
-def epsilon_neighborhood_similarity(X, epsilon=1.7):
+def epsilon_neighborhood_similarity(X, dist=Distance.euclidian, epsilon=1.7):
     m, n = X.shape
     S = np.empty((m, m))
-    for i in range(m // 2 + 1):
+    for i in range(m):
         x = X[i]
         dists = np.linalg.norm(X - x, ord=2, axis=1)
         S[i, :] = (dists < epsilon).astype(float)
-        S[:, i] = S[i, :]
     return S
 
 
-def k_nearest_neighbor_graph(X, k=5, mutual=False):
+def k_nearest_neighbor_graph(X, dist=Distance.euclidian, k=5, mutual=False):
     m, n = X.shape
 
     knn = NearestNeighbors(n_neighbors=k)
@@ -98,19 +111,19 @@ def k_nearest_neighbor_graph(X, k=5, mutual=False):
     return S
 
 
-def similarity_matrix(X, similarity_method=Similarity.fully_connected, **kwargs):
+def similarity_matrix(X, dist=Distance.euclidian, similarity_method=Similarity.fully_connected, **kwargs):
     if similarity_method == Similarity.fully_connected:
-        S = fully_connected_similarity(X, **kwargs)
+        S = fully_connected_similarity(X, dist=dist, **kwargs)
     elif similarity_method == Similarity.eps_neighborhood:
-        S = epsilon_neighborhood_similarity(X, **kwargs)
+        S = epsilon_neighborhood_similarity(X, dist=dist, **kwargs)
     elif similarity_method == Similarity.knn:
-        S = k_nearest_neighbor_graph(X, **kwargs)
+        S = k_nearest_neighbor_graph(X,  dist=dist, **kwargs)
     else:
         raise ValueError("Unknown similarity method %s" % similarity_method)
     return S
 
 
-def spectral_clustering(S, k, normalization=None, generalized_eigenproblem=False, norm_rows=False):
+def laplacian(S, normalization=None):
     m, _ = S.shape
 
     W = S.copy()
@@ -132,9 +145,15 @@ def spectral_clustering(S, k, normalization=None, generalized_eigenproblem=False
     else:
         raise ValueError("Unrecognized Laplacian normalization: %s" % normalization)
 
+    return L
+
+
+def spectral_clustering(S, k, normalization=None, generalized_eigenproblem=False, norm_rows=False):
+
+    L = laplacian(S, normalization=normalization)
+
     if generalized_eigenproblem:
-        if D is None:
-            D = np.diag(d)
+        D = np.diag(S.sum(axis=1))
         w, v = scipy.linalg.eig(L, D)
     else:
         w, v = np.linalg.eig(L)
@@ -146,6 +165,52 @@ def spectral_clustering(S, k, normalization=None, generalized_eigenproblem=False
         row_sums = np.linalg.norm(U, axis=1)
         U = U / row_sums[:, np.newaxis]
 
+    kmeans = KMeans(n_clusters=k)
+    A = kmeans.fit_predict(U)
+    return A
+
+
+def recursive_spectral_clustering(S, k, depth=2,
+                                  normalization=None, generalized_eigenproblem=False, norm_rows=False):
+
+    L = laplacian(S, normalization=normalization)
+
+    if generalized_eigenproblem:
+        D = np.diag(S.sum(axis=1))
+        w, v = scipy.linalg.eig(L, D)
+    else:
+        w, v = np.linalg.eig(L)
+
+    order = w.argsort()
+    U = v[:, order[:k]]  # first k eigenvalues
+
+    if norm_rows:
+        row_sums = np.linalg.norm(U, axis=1)
+        U = U / row_sums[:, np.newaxis]
+
+    if depth > 0:
+        _S = similarity_matrix(U, dist=Distance.cosine_similarity)
+        return recursive_spectral_clustering(_S, k, depth=depth - 1,
+                                             normalization=normalization,
+                                             generalized_eigenproblem=generalized_eigenproblem,
+                                             norm_rows=norm_rows)
+    else:
+        return KMeans(n_clusters=k).fit_predict(U)
+
+
+def spectral_visualization(S, k, z_true, normalization=None):
+    L = laplacian(S, normalization=normalization)
+
+    w, v = np.linalg.eig(L)
+    order = w.argsort()
+    U = v[:, order[:k]]  # first k eigenvalues
+
+    plt.figure()
+    u = PCA(n_components=2).fit_transform(U)
+    plt.scatter(u[:, 0], u[:, 1], c=z_true)
+    plt.title("PCA of Spectral Decomposition")
+    plt.show()
+
     plt.figure()
     plt.plot(sorted(w))
     plt.title("Eigenvalues")
@@ -156,10 +221,6 @@ def spectral_clustering(S, k, normalization=None, generalized_eigenproblem=False
         plt.plot(sorted(v[:, order[i]]))
     plt.legend(["Eigenvector %d" % i for i in range(k)])
     plt.show()
-
-    kmeans = KMeans(n_clusters=k)
-    A = kmeans.fit_predict(U)
-    return A
 
 
 def show_points(X, z, title=None):
@@ -183,14 +244,28 @@ def show_points(X, z, title=None):
     plt.show()
 
 
+def evaluate(z_true, A, name):
+    print("%s:" % name)
+    complete_score = completeness_score(z_true, A)
+    homog_score = homogeneity_score(z_true, A)
+    print("Completeness score: %s" % complete_score)
+    print("Homogeneity score: %s" % homog_score)
+
+
 def main():
-    m = 2000 # number of points
-    n = 50 # Number of dimensions
-    k = 30 # Number of latent clusters
+    m = 1500  # number of points
+    n = 50  # Number of dimensions
+    k = 4  # Number of latent clusters
 
     np.random.seed(3)
     X, z_true = draw_points(m, n, k=k)
     show_points(X, z_true, title="True")
+
+    # A_spec = SpectralClustering(n_clusters=k).fit_predict(X)
+    # evaluate(z_true, A_spec, "sklearn.cluster.SpectralClustering")
+
+    # A_kmeans = KMeans(n_clusters=k).fit_predict(X)
+    # evaluate(z_true, A_kmeans, "kmeans")
 
     S = fully_connected_similarity(X)
 
@@ -203,12 +278,15 @@ def main():
     # Normalized spectral clustering according to Ng, Jordan, and Weiss (2002)
     A = spectral_clustering(S, k, normalization=LaplacianNorm.symmetric, norm_rows=True)
 
-    show_points(X, A, title="Spectral Clustering")
+    spectral_visualization(S, k, z_true, normalization=LaplacianNorm.symmetric)
 
-    complete_score = completeness_score(z_true, A)
-    homog_score = homogeneity_score(z_true, A)
-    print("Completeness score: %s" % complete_score)
-    print("Homogeneity score: %s" % homog_score)
+    show_points(X, A, title="Spectral Clustering")
+    evaluate(z_true, A, "Normalized spectral clustering")
+
+    # A_rec = recursive_spectral_clustering(S, k, normalization=LaplacianNorm.symmetric, norm_rows=True)
+    #
+    # evaluate(z_true, A_rec, "Recursive spectral clustering")
+    # show_points(X, A_rec, title="Recursive Spectral Clustering")
 
 
 if __name__ == "__main__":
