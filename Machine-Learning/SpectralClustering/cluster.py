@@ -18,7 +18,9 @@ from sklearn.cluster import KMeans, SpectralClustering
 from sklearn.decomposition import PCA
 from sklearn.metrics.cluster import completeness_score, homogeneity_score
 from sklearn.neighbors import NearestNeighbors
+from sklearn.mixture import GaussianMixture
 
+import sample
 
 class Similarity(Enum):
     eps_neighborhood = 1
@@ -36,29 +38,6 @@ class Distance(Enum):
     cosine_similarity = 2
 
 
-def draw_points(m, n, k):
-    # Sample m points from an n dimensional mixture of k Gaussians
-    mu = np.random.random((k, n)) * 5
-
-    # random covariance matrices
-    sigma = np.empty((k, n, n))
-    for j in range(k):
-        s = np.random.randn(n, n)
-        sigma[j] = np.matmul(s, s.T) / 20
-        # sigma[j] = np.eye(n) / 10
-
-    phi = np.random.random(k)
-    phi /= phi.sum()
-
-    Z = list(range(k))  # latent space
-    z = np.random.choice(Z, m, p=phi)
-
-    X = np.empty((m, n))
-    for j in range(k):
-        X[z == j] = np.random.multivariate_normal(mu[j], sigma[j], X[z == j].shape[0])
-    return X, z
-
-
 def fully_connected_similarity(X, dist=Distance.euclidian, neighborhood_width=1):
     sigma = neighborhood_width
     m, n = X.shape
@@ -73,6 +52,7 @@ def fully_connected_similarity(X, dist=Distance.euclidian, neighborhood_width=1)
 
         elif dist == Distance.cosine_similarity:
             dists = 1 + np.matmul(X, xi) / (np.linalg.norm(xi) * np.linalg.norm(X, axis=1))
+            dists = dists.real
             S[i, :] = np.power(dists, 2)
 
         else:
@@ -189,7 +169,7 @@ def recursive_spectral_clustering(S, k, depth=2,
         U = U / row_sums[:, np.newaxis]
 
     if depth > 0:
-        _S = similarity_matrix(U, dist=Distance.cosine_similarity)
+        _S = similarity_matrix(U, dist=Distance.cosine_similarity, similarity_method=Similarity.fully_connected)
         return recursive_spectral_clustering(_S, k, depth=depth - 1,
                                              normalization=normalization,
                                              generalized_eigenproblem=generalized_eigenproblem,
@@ -254,20 +234,26 @@ def evaluate(z_true, A, name):
 
 def main():
     m = 1500  # number of points
-    n = 50  # Number of dimensions
-    k = 4  # Number of latent clusters
+    n = 2  # Number of dimensions
+    k = 2  # Number of latent clusters
 
     np.random.seed(3)
-    X, z_true = draw_points(m, n, k=k)
+    X, z_true = sample.sample_coils(m, n, k)
     show_points(X, z_true, title="True")
 
-    # A_spec = SpectralClustering(n_clusters=k).fit_predict(X)
-    # evaluate(z_true, A_spec, "sklearn.cluster.SpectralClustering")
+    S = k_nearest_neighbor_graph(X, k=20)
 
-    # A_kmeans = KMeans(n_clusters=k).fit_predict(X)
-    # evaluate(z_true, A_kmeans, "kmeans")
+    gmm = GaussianMixture(n_components=k)
+    gmm.fit(X)
+    A_gmm = gmm.predict(X)
+    evaluate(z_true, A_gmm, name="Guassian Mixtures EM")
 
-    S = fully_connected_similarity(X)
+    A_kmeans = KMeans(n_clusters=k).fit_predict(X)
+    evaluate(z_true, A_kmeans, "KMeans")
+
+    spec = SpectralClustering(n_clusters=k, affinity='precomputed')
+    A_spec = spec.fit_predict(S)
+    evaluate(z_true, A_spec, "sklearn.cluster.SpectralClustering")
 
     # Unnormalized spectral clustering
     # A = spectral_clustering(S, k)
@@ -283,10 +269,11 @@ def main():
     show_points(X, A, title="Spectral Clustering")
     evaluate(z_true, A, "Normalized spectral clustering")
 
-    # A_rec = recursive_spectral_clustering(S, k, normalization=LaplacianNorm.symmetric, norm_rows=True)
-    #
-    # evaluate(z_true, A_rec, "Recursive spectral clustering")
-    # show_points(X, A_rec, title="Recursive Spectral Clustering")
+    A_rec = recursive_spectral_clustering(S, k, depth=2,
+                                          normalization=LaplacianNorm.symmetric, norm_rows=True)
+
+    evaluate(z_true, A_rec, "Recursive spectral clustering")
+    show_points(X, A_rec, title="Recursive Spectral Clustering")
 
 
 if __name__ == "__main__":
