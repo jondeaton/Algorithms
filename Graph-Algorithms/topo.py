@@ -79,34 +79,44 @@ def median_of_two(a: list[int], b: list[int]) -> int:
     """Find the median of two sorted arrays in O(log(m+n))
     https://leetcode.com/problems/median-of-two-sorted-arrays/
     """
-    return combine_kth(a, b, (0, len(a)), (0, len(b)))
+    return find_median(a, b, 0, len(a) - 1, 0, len(b) - 1)
 
-def combine_kth(a, b, a_bound, b_bound):
-    alo, ahi = a_bound
-    med_a = alo + (ahi - alo) // 2
-
+def find_median(a, b, alo, ahi, blo, bhi):
     # If we were to merge b into a maintaining sort, how many elements of b
     # would be inserted before the median of a?
-    a_ins_left = bisect.bisect_left(b, a[med_a])
-    if a_ins_left > len(b) // 2:
-        # more elements inserted left than right
-        ahi = med_a
-    elif a_ins_left < len(b) // 2:
-        alo = med_a
-    else:
-        return a[med_a]
+    print(alo, ahi, blo, bhi)
 
-    blo, bhi = b_bound
-    med_b = blo + (bhi - blo) // 2
-    b_ins_left = bisect.bisect_left(a, b[med_b])
-    if b_ins_left > len(a) // 2:
-        bhi = med_b
-    elif b_ins_left < len(a) // 2:
-        blo = med_b
-    else:
-        return b[med_b]
+    med_idx = (len(a) + len(b)) // 2
 
-    return combine_kth(a, b, (alo, ahi), (blo, bhi))
+    if alo <= ahi:
+        med = alo + (ahi - alo) // 2
+        merged_idx = _merge_index(a, b, med)
+        if merged_idx == med_idx:
+            return a[med]
+        elif merged_idx < med_idx:
+            # This number is less than the median
+            alo = med
+        elif merged_idx > med_idx:
+            # this number is more than the median
+            ahi = med
+
+    if blo <= bhi:
+        med = blo + (bhi - blo) // 2
+        merged_idx = _merge_index(b, a, med)
+        if merged_idx == med_idx:
+            return b[med]
+        elif merged_idx < med_idx:
+            # This number is less than the median
+            blo = med
+        elif merged_idx > med_idx:
+            # this number is more than the median
+            bhi = med
+
+    return find_median(a, b, alo, ahi, blo, bhi)
+
+def _merge_index(a, b, i):
+    """index where a[i] is after sorted merge with b"""
+    return i + bisect.bisect_left(b, a[i])
 
 
 def topk(arr: list[Any], k: int):
